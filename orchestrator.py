@@ -71,7 +71,7 @@ def get_planner_llm():
     Uses Pro-tier models that excel at structured reasoning and JSON generation.
     """
     if os.getenv("OPENAI_API_KEY"):
-        return ChatOpenAI(model="gpt-4o", temperature=0.1)
+        return ChatOpenAI(model="gpt-5", temperature=0.1)
     elif os.getenv("ANTHROPIC_API_KEY"):
         return ChatAnthropic(model="claude-opus-4-5", temperature=0.1)
     elif os.getenv("GEMINI_API_KEY"):
@@ -89,9 +89,9 @@ def get_executor_llm():
     Uses Flash-tier models optimised for throughput over deep reasoning.
     """
     if os.getenv("OPENAI_API_KEY"):
-        return ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
+        return ChatOpenAI(model="gpt-5", temperature=0.3)
     elif os.getenv("ANTHROPIC_API_KEY"):
-        return ChatAnthropic(model="claude-haiku-3-5", temperature=0.3)
+        return ChatAnthropic(model="claude-sonnet-4-5", temperature=0.3)
     elif os.getenv("GEMINI_API_KEY"):
         from langchain_google_genai import ChatGoogleGenerativeAI
         model = os.getenv("GEMINI_EXECUTOR_MODEL", "gemini-2.5-flash")
