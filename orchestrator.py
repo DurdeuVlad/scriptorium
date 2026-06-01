@@ -208,6 +208,17 @@ async def staff_writer(state: NewsroomState) -> Dict[str, Any]:
                     manuscript[sid] = response.content
                 # BUG FIX: Pydantic v2 models are immutable; mutating ticket.resolved is silently dropped.
                 # We need to rebuild the editorial_memo list with resolved flags updated.
+        
+        # Write section to disk so file watcher streams it to UI
+        try:
+            os.makedirs(state.project_path, exist_ok=True)
+            filepath = os.path.join(state.project_path, f"{sid}.md")
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(manuscript[sid])
+            print(f"[staff_writer] Wrote draft file: {filepath}")
+        except Exception as e:
+            print(f"[staff_writer] Failed to write draft file: {e}")
+
     # Rebuild editorial_memo with resolved tickets updated
     updated_memo = []
     for t in state.editorial_memo:
@@ -234,6 +245,16 @@ async def pattern_scrubber(state: NewsroomState) -> Dict[str, Any]:
             manuscript[sid] = response.content
         else:
             manuscript[sid] = cleaned
+            
+        # Write cleaned section back to disk
+        try:
+            os.makedirs(state.project_path, exist_ok=True)
+            filepath = os.path.join(state.project_path, f"{sid}.md")
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(manuscript[sid])
+            print(f"[pattern_scrubber] Wrote clean draft file: {filepath}")
+        except Exception as e:
+            print(f"[pattern_scrubber] Failed to write clean draft file: {e}")
             
     return {"manuscript": manuscript, "run_phase": "copyediting"}
 
