@@ -1,0 +1,85 @@
+# ── Python ──────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.spec
+
+# ── Virtual environments ─────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ── Environment / secrets ────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Databases (runtime artefacts, never commit) ──────────────────────────
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+db/
+
+# ── Generated document artefacts ─────────────────────────────────────────
+artifacts/
+logs/
+
+# ── Node / frontend ──────────────────────────────────────────────────────
+node_modules/
+package-lock.json
+yarn.lock
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+*.tsbuildinfo
+
+# ── Build outputs ────────────────────────────────────────────────────────
+dist/
+build/
+out/
+
+# ── IDE / editor ─────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS noise ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Temp / cache ─────────────────────────────────────────────────────────
+*.tmp
+*.temp
+*.bak
+*.log
+.cache/
+.temp/
+scratch/
+
+# ── Test outputs ─────────────────────────────────────────────────────────
+test-results/
+coverage/
+.pytest_cache/
+htmlcov/
+
+# ── Framework sync (internal tooling) ────────────────────────────────────
+sync/export-packs/*/
+sync/import-packs/*/
+sync/sync-manifests/*.json
+
+# ── MCP runtime ──────────────────────────────────────────────────────────
+mcp/*/data.db
+mcp/*/data.db-*

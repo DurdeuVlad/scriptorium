@@ -1,0 +1,10 @@
+{
+  "name": "scriptorium",
+  "version": "0.1.0",
+  "description": "Scriptorium — An AI-powered multi-agent editorial orchestrator for long-form documents.",
+  "author": "Scriptorium",
+  "license": "MIT",
+  "dependencies": {
+    "sqlite3": "^6.0.1"
+  }
+}
