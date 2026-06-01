@@ -1,0 +1,14 @@
+langgraph
+rdflib
+fastapi
+uvicorn
+pydantic
+mcp
+python-dotenv
+watchdog
+tiktoken
+langchain-anthropic
+langchain-openai
+langchain-community
+requests
+aiohttp
