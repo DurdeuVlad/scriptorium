@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "rewrite_plan.schema.json",
+  "title": "Rewrite Plan",
+  "description": "Structured plan for revising a document based on review findings. Each revision is specific, actionable, and mapped to the issue that triggered it. Consumed by section-drafters and voice-editor.",
+  "type": "object",
+  "required": ["plan_id", "draft_ref", "review_id", "revisions", "created_at"],
+  "properties": {
+    "plan_id": {
+      "type": "string",
+      "description": "Unique identifier for this rewrite plan"
+    },
+    "draft_ref": {
+      "type": "string",
+      "description": "Path or ID of the draft document being revised"
+    },
+    "review_id": {
+      "type": "string",
+      "description": "ID of the review report that produced this rewrite plan"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Cache run ID this plan belongs to"
+    },
+    "revisions": {
+      "type": "array",
+      "description": "Ordered list of revisions to be made — blocking revisions first, then high, medium, low",
+      "items": {
+        "type": "object",
+        "required": ["revision_id", "issue_id", "type", "scope", "instruction"],
+        "properties": {
+          "revision_id": {
+            "type": "string",
+            "description": "Unique identifier for this revision within the plan"
+          },
+          "issue_id": {
+            "type": "string",
+            "description": "ID of the review issue this revision addresses"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["cut", "rewrite", "expand", "restructure", "voice-fix", "fact-check", "canon-fix"],
+            "description": "Type of revision: cut = remove content, rewrite = replace with new content, expand = add detail, restructure = change organization, voice-fix = correct tone or style, fact-check = verify and correct a claim, canon-fix = align with canon"
+          },
+          "scope": {
+            "type": "string",
+            "description": "Section title, paragraph, or quoted phrase identifying what is being revised — specific enough that the drafter can locate it without ambiguity"
+          },
+          "instruction": {
+            "type": "string",
+            "description": "Specific instruction for the revision — must be actionable and not vague (e.g. 'Cut the second paragraph of Section 3 — it repeats what was said in the intro', not 'tighten this up')"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["blocking", "high", "medium", "low"],
+            "description": "blocking = document cannot advance until resolved; high = should resolve before re-review; medium = address before final; low = optional"
+          }
+        }
+      }
+    },
+    "agent_assignments": {
+      "type": "object",
+      "description": "Maps revision types to the agents responsible for executing them",
+      "additionalProperties": {
+        "type": "string",
+        "description": "Agent ID responsible for this revision type"
+      }
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Agent ID that produced this rewrite plan (typically lead-editor)"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of plan creation"
+    }
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "review_report.schema.json",
+  "title": "Review Report",
+  "description": "Aggregated multi-perspective QA report for a draft document. Contains issue lists from all applied QA perspectives and the final gate decision.",
+  "type": "object",
+  "required": ["review_id", "draft_ref", "perspectives_applied", "issues", "gate_decision", "created_at"],
+  "properties": {
+    "review_id": {
+      "type": "string",
+      "description": "Unique identifier for this review"
+    },
+    "draft_ref": {
+      "type": "string",
+      "description": "Path or ID of the draft document being reviewed"
+    },
+    "brief_id": {
+      "type": "string",
+      "description": "ID of the brief against which this draft is being reviewed"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Cache run ID this review belongs to"
+    },
+    "perspectives_applied": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["reader", "skeptic", "domain", "style", "coherence", "ai-stink", "final"]
+      },
+      "description": "List of QA perspectives that were applied — all six standard perspectives plus final are expected for most documents"
+    },
+    "issues": {
+      "type": "array",
+      "description": "Aggregated issue list from all perspectives — sorted by severity (block first, then revise, then note)",
+      "items": {
+        "type": "object",
+        "required": ["issue_id", "perspective", "severity", "location", "description"],
+        "properties": {
+          "issue_id": {
+            "type": "string",
+            "description": "Unique identifier for this issue within the review"
+          },
+          "perspective": {
+            "type": "string",
+            "enum": ["reader", "skeptic", "domain", "style", "coherence", "ai-stink", "final"],
+            "description": "QA perspective that identified this issue"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["block", "revise", "note"],
+            "description": "block = must be resolved before document advances; revise = should be fixed; note = optional improvement"
+          },
+          "location": {
+            "type": "string",
+            "description": "Section title, paragraph reference, or quoted text identifying where the issue occurs"
+          },
+          "description": {
+            "type": "string",
+            "description": "Specific description of the issue — must be actionable, not vague"
+          },
+          "suggested_fix": {
+            "type": "string",
+            "description": "Concrete suggestion for how to resolve this issue"
+          }
+        }
+      }
+    },
+    "gate_decision": {
+      "type": "string",
+      "enum": ["ACCEPT", "REVISE", "BLOCK"],
+      "description": "ACCEPT = document advances; REVISE = revisions required, rewrite plan produced; BLOCK = cannot advance until blocking issues resolved"
+    },
+    "gate_justification": {
+      "type": "string",
+      "description": "Explanation of the gate decision — required for REVISE and BLOCK; recommended for ACCEPT"
+    },
+    "blocking_issues_count": {
+      "type": "integer",
+      "description": "Count of issues with severity = block"
+    },
+    "revise_issues_count": {
+      "type": "integer",
+      "description": "Count of issues with severity = revise"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Agent ID that produced this review report (typically lead-editor)"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of review completion"
+    }
+  }
+}

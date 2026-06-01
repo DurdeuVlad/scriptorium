@@ -1,0 +1,171 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "findings_report.schema.json",
+  "title": "Findings Report",
+  "description": "Raw findings from discovery-agent scan. Reports what was found, what was inferred, and what gaps exist. Does not include blocker classification (that is discovery-orchestrator's responsibility).",
+  "type": "object",
+  "required": ["project_root", "scan_timestamp", "found_context_items", "inferred_context", "gaps"],
+  "properties": {
+    "project_root": {
+      "type": "string",
+      "description": "Absolute path to the project root directory"
+    },
+    "scan_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when scan was performed"
+    },
+    "found_context_items": {
+      "type": "array",
+      "description": "Files and content found that are directly relevant to the task",
+      "items": {
+        "type": "object",
+        "required": ["file", "type", "summary"],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "File path relative to project root or absolute"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "CLAUDE.md",
+              "doctrine",
+              "style_pack",
+              "guide",
+              "artifact",
+              "log",
+              "workflow",
+              "template"
+            ],
+            "description": "Type of context item found"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Brief summary of what was found in this file"
+          },
+          "last_modified": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last modification timestamp if available"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "description": "File size in bytes if available"
+          }
+        }
+      }
+    },
+    "inferred_context": {
+      "type": "array",
+      "description": "Reasonable inferences from found items, clearly labeled as inferred",
+      "items": {
+        "type": "object",
+        "required": ["item", "basis"],
+        "properties": {
+          "item": {
+            "type": "string",
+            "description": "What was inferred (e.g., 'Audience: intermediate developers')"
+          },
+          "basis": {
+            "type": "string",
+            "description": "What was read to infer this (e.g., 'CLAUDE.md line 15 specifies developer audience')"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["high", "medium", "low"],
+            "description": "Confidence level in this inference"
+          }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "description": "Things expected but not found, with specific location checked",
+      "items": {
+        "type": "object",
+        "required": ["expected", "location_checked"],
+        "properties": {
+          "expected": {
+            "type": "string",
+            "description": "What was expected to be found (e.g., 'Style pack for technical writing')"
+          },
+          "location_checked": {
+            "type": "string",
+            "description": "Where it was checked (e.g., '.writing-framework/styles/')"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Specific reason not found (e.g., 'Directory empty', 'File does not exist', 'Permission denied')"
+          }
+        }
+      }
+    },
+    "style_pack_detected": {
+      "type": ["string", "null"],
+      "description": "Name of active or most relevant style pack found, or null if none found"
+    },
+    "guides_available": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of guide identifiers found (e.g., 'G-DOC-001', 'G-STYLE-002')"
+    },
+    "artifacts_present": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of artifact file paths found relative to project root"
+    },
+    "templates_available": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of template names found"
+    },
+    "prior_runs": {
+      "type": "array",
+      "description": "Prior run records found in logs or cache-server",
+      "items": {
+        "type": "object",
+        "properties": {
+          "run_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["running", "completed", "failed", "cancelled", "paused"]
+          },
+          "workflow": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "scan_errors": {
+      "type": "array",
+      "description": "Errors encountered during scan (permissions, corruption, etc.)",
+      "items": {
+        "type": "object",
+        "required": ["location", "error"],
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "File or directory where error occurred"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          }
+        }
+      }
+    }
+  }
+}

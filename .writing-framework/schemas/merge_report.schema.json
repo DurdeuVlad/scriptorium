@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "merge_report.schema.json",
+  "title": "Merge Report",
+  "description": "Output from merge-normalizer documenting how sections were assembled, what voice inconsistencies were found, and whether normalization was applied. Consumed by lead-editor and QA workflow.",
+  "type": "object",
+  "required": ["merge_id", "outline_id", "sections_merged", "voice_issues", "created_at"],
+  "properties": {
+    "merge_id": {
+      "type": "string",
+      "description": "Unique identifier for this merge operation"
+    },
+    "outline_id": {
+      "type": "string",
+      "description": "ID of the outline whose sections were merged"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Cache run ID this report belongs to"
+    },
+    "sections_merged": {
+      "type": "array",
+      "description": "Status record for each section from the outline",
+      "items": {
+        "type": "object",
+        "required": ["section_id", "status"],
+        "properties": {
+          "section_id": {
+            "type": "string",
+            "description": "ID matching the section_id in outline.json"
+          },
+          "section_title": {
+            "type": "string",
+            "description": "Section title for human readability"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["complete", "placeholder", "blocked"],
+            "description": "complete = section is fully drafted; placeholder = structure-only, awaiting content; blocked = could not be drafted (see blocker_ref)"
+          },
+          "blocker_ref": {
+            "type": "string",
+            "description": "Blocker report ID or description if status is blocked or placeholder"
+          },
+          "word_count": {
+            "type": "integer",
+            "description": "Actual word count of the drafted section"
+          },
+          "voice_agent": {
+            "type": "string",
+            "description": "ID of the section-drafter agent that produced this section"
+          }
+        }
+      }
+    },
+    "voice_issues": {
+      "type": "array",
+      "description": "Voice inconsistencies detected across sections during assembly",
+      "items": {
+        "type": "object",
+        "required": ["issue", "sections"],
+        "properties": {
+          "sections": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Section IDs involved in the voice inconsistency"
+          },
+          "issue": {
+            "type": "string",
+            "description": "Description of the voice inconsistency — specific pattern identified (e.g. 'Section 2 uses formal register while Sections 1 and 3 use conversational register')"
+          },
+          "resolution": {
+            "type": "string",
+            "description": "How the inconsistency was resolved, or why it was left for lead-editor review"
+          }
+        }
+      }
+    },
+    "normalization_applied": {
+      "type": "boolean",
+      "description": "True if merge-normalizer made automated voice normalization changes to the assembled draft"
+    },
+    "normalization_notes": {
+      "type": "string",
+      "description": "Summary of what normalization was applied and which sections were affected"
+    },
+    "draft_path": {
+      "type": "string",
+      "description": "File path of the assembled draft output"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Agent ID that produced this merge report (typically merge-normalizer)"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of merge completion"
+    }
+  }
+}

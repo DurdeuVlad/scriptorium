@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "quality_gate.schema.json",
+  "title": "Quality Gate Result",
+  "description": "Structured record of a quality gate check at the end of a workflow phase. Documents which criteria passed, which failed, and what the next action is. PASS advances to the next phase; FAIL returns to the triggering stage; OVERRIDE advances with documented justification.",
+  "type": "object",
+  "required": ["gate_id", "phase", "decision", "criteria_results", "created_at"],
+  "properties": {
+    "gate_id": {
+      "type": "string",
+      "description": "Unique identifier for this gate check"
+    },
+    "phase": {
+      "type": "string",
+      "enum": ["discovery", "brief", "outline", "draft", "qa", "final"],
+      "description": "The workflow phase this gate was applied at the end of"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Cache run ID this gate check belongs to"
+    },
+    "artifact_ref": {
+      "type": "string",
+      "description": "Path or ID of the primary artifact being evaluated (e.g. brief.json, outline.json, draft file path)"
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["PASS", "FAIL", "OVERRIDE"],
+      "description": "PASS=all required criteria met, advance to next phase; FAIL=one or more required criteria not met, return to current phase; OVERRIDE=advancing despite unmet criteria (requires justification)"
+    },
+    "override_reason": {
+      "type": "string",
+      "description": "Required if decision is OVERRIDE — must explain why advancing is acceptable despite unmet criteria and who authorized the override"
+    },
+    "criteria_results": {
+      "type": "array",
+      "description": "Per-criterion evaluation results — every criterion defined for this phase must appear",
+      "items": {
+        "type": "object",
+        "required": ["criterion", "result"],
+        "properties": {
+          "criterion": {
+            "type": "string",
+            "description": "The specific gate criterion being evaluated (from doctrine/QUALITY_GATES.md for this phase)"
+          },
+          "result": {
+            "type": "string",
+            "enum": ["pass", "fail", "not-applicable"],
+            "description": "pass=criterion is met; fail=criterion is not met; not-applicable=criterion does not apply to this document type"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Additional context for the result — required for fail, optional for pass"
+          }
+        }
+      }
+    },
+    "unmet_criteria": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of criterion descriptions where result=fail — must be empty for PASS decision (or all failures overridden)"
+    },
+    "next_action": {
+      "type": "string",
+      "description": "What happens next: if PASS, the next phase and command to invoke; if FAIL, the stage to return to and what must be corrected; if OVERRIDE, same as PASS with override note"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Agent ID that evaluated this gate (typically lead-editor or the phase owner)"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of gate evaluation"
+    }
+  }
+}

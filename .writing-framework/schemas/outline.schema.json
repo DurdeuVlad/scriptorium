@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "outline.schema.json",
+  "title": "Document Outline",
+  "description": "Structured outline defining all sections, their purposes, and scopes. Required input for section drafters. Each section entry must be complete enough for a drafter to begin writing without asking clarifying questions.",
+  "type": "object",
+  "required": ["outline_id", "brief_id", "title", "sections", "created_at"],
+  "properties": {
+    "outline_id": {
+      "type": "string",
+      "description": "Unique identifier for this outline"
+    },
+    "brief_id": {
+      "type": "string",
+      "description": "ID of the brief this outline was derived from"
+    },
+    "title": {
+      "type": "string",
+      "description": "Document title — should match or refine the brief title"
+    },
+    "template_used": {
+      "type": "string",
+      "description": "Template ID from templates/ if an outline template was applied"
+    },
+    "sections": {
+      "type": "array",
+      "description": "Ordered list of all sections in the document",
+      "items": {
+        "type": "object",
+        "required": ["section_id", "title", "purpose", "estimated_words"],
+        "properties": {
+          "section_id": {
+            "type": "string",
+            "description": "Unique identifier for this section within the outline"
+          },
+          "title": {
+            "type": "string",
+            "description": "Section heading text"
+          },
+          "level": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4,
+            "description": "Heading level (1=H1, 2=H2, 3=H3, 4=H4)"
+          },
+          "purpose": {
+            "type": "string",
+            "description": "What this section accomplishes for the reader — must be distinct from all other sections"
+          },
+          "required_content": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Specific content items, claims, or examples that must appear in this section"
+          },
+          "source_refs": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Source file paths or guide IDs relevant to this section"
+          },
+          "estimated_words": {
+            "type": "integer",
+            "description": "Target word count for this section"
+          },
+          "subsections": {
+            "type": "array",
+            "description": "Nested subsections, following the same structure as parent sections",
+            "items": {
+              "$ref": "#/properties/sections/items"
+            }
+          },
+          "notes": {
+            "type": "string",
+            "description": "Additional guidance for the section drafter — approach, tone notes, or special handling instructions"
+          }
+        }
+      }
+    },
+    "total_estimated_words": {
+      "type": "integer",
+      "description": "Sum of all section estimated_words — must fall within the brief's word count constraints"
+    },
+    "structure_justification": {
+      "type": "string",
+      "description": "Explanation of why sections are in this order — must be reader-logic justification, not production order"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Agent ID that created this outline"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of outline creation"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Cache run ID this outline belongs to"
+    }
+  }
+}

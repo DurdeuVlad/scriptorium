@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "export_pack.schema.json",
+  "title": "Export Pack Manifest",
+  "description": "Manifest for an exported framework content pack. Describes pack contents, provenance, version, and compatibility requirements.",
+  "type": "object",
+  "required": ["pack_id", "pack_type", "pack_version", "framework_version", "items", "created_at"],
+  "properties": {
+    "pack_id": {
+      "type": "string",
+      "description": "Unique identifier for this pack (format: pack_[type]_[timestamp])"
+    },
+    "pack_type": {
+      "type": "string",
+      "enum": ["style-pack", "doctrine-pack", "workflow-pack", "command-pack", "full-framework"],
+      "description": "Type of content pack: style-pack (style guides + rubrics), doctrine-pack (principles + doctrine), workflow-pack (workflows + agents), command-pack (command specs), full-framework (complete framework)"
+    },
+    "pack_name": {
+      "type": "string",
+      "description": "Human-readable name for this pack"
+    },
+    "pack_version": {
+      "type": "string",
+      "description": "Semantic version of this pack (e.g., 1.0.0)"
+    },
+    "framework_version": {
+      "type": "string",
+      "description": "Framework version this pack was exported from (e.g., Phase 7)"
+    },
+    "source_repo": {
+      "type": "string",
+      "description": "Repository or project this pack was exported from"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of pack contents and intended use"
+    },
+    "items": {
+      "type": "array",
+      "description": "List of all items included in this pack",
+      "items": {
+        "type": "object",
+        "required": ["item_path", "item_type", "content_hash"],
+        "properties": {
+          "item_path": {
+            "type": "string",
+            "description": "Relative path to item within pack"
+          },
+          "item_type": {
+            "type": "string",
+            "description": "Type of item (doctrine, style-pack, workflow, agent, command, schema, template)"
+          },
+          "content_hash": {
+            "type": "string",
+            "description": "SHA-256 hash of item content for integrity verification"
+          },
+          "source_path": {
+            "type": "string",
+            "description": "Original path in source repo"
+          },
+          "last_modified": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last modification timestamp from source"
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Other packs or framework components required by this pack"
+    },
+    "compatibility_notes": {
+      "type": "string",
+      "description": "Notes on framework version compatibility, breaking changes, or migration requirements"
+    },
+    "selective_import_supported": {
+      "type": "boolean",
+      "description": "Whether this pack supports selective import of individual items (true) or must be imported as a whole (false)",
+      "default": true
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Agent or user that created this pack"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of pack creation"
+    },
+    "checksum": {
+      "type": "string",
+      "description": "Overall pack checksum for integrity verification"
+    }
+  }
+}

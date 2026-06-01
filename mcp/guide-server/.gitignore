@@ -1,0 +1,7 @@
+node_modules/
+guides.db
+guides.db-shm
+guides.db-wal
+*.db
+*.db-shm
+*.db-wal

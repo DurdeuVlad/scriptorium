@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "conflict_report.schema.json",
+  "title": "Conflict Report",
+  "description": "Report of conflicts detected during sync, import, or export operations. Documents both versions and resolution options.",
+  "type": "object",
+  "required": ["conflict_id", "operation_type", "conflicts", "created_at"],
+  "properties": {
+    "conflict_id": {
+      "type": "string",
+      "description": "Unique identifier for this conflict report"
+    },
+    "operation_type": {
+      "type": "string",
+      "enum": ["sync", "import", "export", "merge"],
+      "description": "Type of operation that detected conflicts"
+    },
+    "operation_id": {
+      "type": "string",
+      "description": "ID of the sync/import/export operation that generated this report"
+    },
+    "conflicts": {
+      "type": "array",
+      "description": "List of detected conflicts",
+      "items": {
+        "type": "object",
+        "required": ["item_path", "conflict_type", "local_version", "source_version"],
+        "properties": {
+          "item_path": {
+            "type": "string",
+            "description": "Path to conflicting item"
+          },
+          "conflict_type": {
+            "type": "string",
+            "enum": ["content-diverged", "version-mismatch", "schema-incompatible", "dependency-conflict", "local-override-exists"],
+            "description": "Type of conflict detected"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["blocking", "warning", "info"],
+            "description": "Severity of conflict: blocking=must resolve before proceeding, warning=should resolve, info=informational only"
+          },
+          "local_version": {
+            "type": "object",
+            "properties": {
+              "content_hash": { "type": "string" },
+              "last_modified": { "type": "string", "format": "date-time" },
+              "version": { "type": "string" },
+              "path": { "type": "string" }
+            },
+            "description": "Local version details"
+          },
+          "source_version": {
+            "type": "object",
+            "properties": {
+              "content_hash": { "type": "string" },
+              "last_modified": { "type": "string", "format": "date-time" },
+              "version": { "type": "string" },
+              "path": { "type": "string" }
+            },
+            "description": "Source version details"
+          },
+          "common_ancestor": {
+            "type": "object",
+            "properties": {
+              "content_hash": { "type": "string" },
+              "version": { "type": "string" }
+            },
+            "description": "Common ancestor version if detected (for three-way merge)"
+          },
+          "resolution_options": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "option": {
+                  "type": "string",
+                  "enum": ["prefer-local", "prefer-source", "merge", "manual", "skip"],
+                  "description": "Resolution option"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of what this option does"
+                },
+                "recommended": {
+                  "type": "boolean",
+                  "description": "Whether this is the recommended resolution"
+                }
+              }
+            },
+            "description": "Available resolution options for this conflict"
+          },
+          "auto_resolvable": {
+            "type": "boolean",
+            "description": "Whether this conflict can be auto-resolved based on resolution mode"
+          },
+          "resolution_applied": {
+            "type": "string",
+            "description": "Resolution that was applied (if any)"
+          }
+        }
+      }
+    },
+    "blocking_count": {
+      "type": "integer",
+      "description": "Number of blocking conflicts that must be resolved"
+    },
+    "warning_count": {
+      "type": "integer",
+      "description": "Number of warning-level conflicts"
+    },
+    "resolution_mode": {
+      "type": "string",
+      "enum": ["ask", "prefer-local", "prefer-source", "merge"],
+      "description": "Conflict resolution mode used"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of conflict detection"
+    }
+  }
+}

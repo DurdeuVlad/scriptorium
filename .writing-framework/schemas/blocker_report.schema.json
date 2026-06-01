@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "blocker_report.schema.json",
+  "title": "Blocker Report",
+  "description": "Structured documentation of a workflow blocker, including classification, impacted scope, what can continue, and a complete resume plan. Every blocker must include enough context to resume without re-reading prior session history.",
+  "type": "object",
+  "required": ["blocker_id", "classification", "description", "impacted_scope", "resume", "created_at"],
+  "properties": {
+    "blocker_id": {
+      "type": "string",
+      "description": "Unique identifier for this blocker"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Cache run ID during which this blocker was encountered"
+    },
+    "classification": {
+      "type": "string",
+      "enum": [
+        "B1-missing-user-decision",
+        "B2-missing-repo-context",
+        "B3-missing-guide",
+        "B4-missing-source-material",
+        "B5-failed-toolchain",
+        "B6-artifact-export-failure",
+        "B7-schema-conflict",
+        "B8-canon-conflict",
+        "B9-validation-failure"
+      ],
+      "description": "Blocker type from the B1-B9 taxonomy: B1=needs user input, B2=missing local context, B3=missing guide, B4=missing source, B5=tool failure, B6=export failure, B7=schema conflict, B8=canon conflict, B9=output validation failed"
+    },
+    "description": {
+      "type": "string",
+      "description": "Specific description of what is blocked and exactly why — must be specific enough for the user to understand without reading prior context"
+    },
+    "impacted_scope": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Workflow stages, outputs, or sections that cannot proceed until this blocker is resolved"
+    },
+    "unimpacted_scope": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Work that can continue in parallel despite this blocker — explicitly stated to enable partial progress"
+    },
+    "partial_outputs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Outputs that were produced before or despite the blocker — file paths or artifact IDs"
+    },
+    "resume": {
+      "type": "object",
+      "required": ["blocked_on", "to_resume", "when_unblocked", "already_complete"],
+      "properties": {
+        "blocked_on": {
+          "type": "string",
+          "description": "Exact description of what must be provided or resolved to unblock — specific and unambiguous"
+        },
+        "to_resume": {
+          "type": "string",
+          "description": "Command or action to run when the blocker is resolved (e.g. '/draft-section section_id=S3 run_id=abc123')"
+        },
+        "when_unblocked": {
+          "type": "string",
+          "description": "Description of what will happen when the blocker is resolved — what will be produced and in what order"
+        },
+        "already_complete": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Work that is already complete and does not need to be redone when resuming"
+        }
+      }
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Agent ID that identified and reported this blocker"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the blocker was recorded"
+    }
+  }
+}

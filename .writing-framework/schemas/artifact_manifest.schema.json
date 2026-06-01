@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "artifact_manifest.schema.json",
+  "title": "Artifact Manifest",
+  "description": "Metadata record for a generated artifact, tracking its source, format, output path, validation status, and dependencies. Every artifact operation produces or updates a manifest entry for traceability.",
+  "type": "object",
+  "required": ["artifact_id", "artifact_type", "output_path", "generation_method", "validation_status", "created_at"],
+  "properties": {
+    "artifact_id": {
+      "type": "string",
+      "description": "Unique identifier for this artifact"
+    },
+    "artifact_type": {
+      "type": "string",
+      "enum": ["markdown", "docx", "pdf", "latex"],
+      "description": "Format of the generated artifact"
+    },
+    "title": {
+      "type": "string",
+      "description": "Document title as it appears in the artifact"
+    },
+    "source_artifact": {
+      "type": "string",
+      "description": "Artifact ID of the source if this artifact was produced by conversion or export from another artifact"
+    },
+    "source_format": {
+      "type": "string",
+      "enum": ["markdown", "docx", "pdf", "latex"],
+      "description": "Format of the source artifact, if applicable"
+    },
+    "output_path": {
+      "type": "string",
+      "description": "Absolute file path where the artifact was written"
+    },
+    "generation_method": {
+      "type": "string",
+      "enum": ["create", "update", "export", "compile", "normalize"],
+      "description": "How the artifact was produced: create=new file, update=modified existing, export=converted from another format, compile=built from source (e.g. LaTeX to PDF), normalize=formatting normalization applied"
+    },
+    "validation_status": {
+      "type": "string",
+      "enum": ["valid", "invalid", "not-validated"],
+      "description": "Result of artifact validation: valid=file exists, opens, and parses correctly; invalid=validation failed (see validation_errors); not-validated=validation not yet run"
+    },
+    "validation_errors": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of validation errors if validation_status is invalid"
+    },
+    "export_status": {
+      "type": "string",
+      "enum": ["pending", "exported", "failed", "not-applicable"],
+      "description": "Export delivery status: pending=awaiting export, exported=successfully delivered, failed=export failed (artifact may be in fallback format), not-applicable=no export step required"
+    },
+    "file_size_bytes": {
+      "type": "integer",
+      "description": "File size of the generated artifact in bytes"
+    },
+    "word_count": {
+      "type": "integer",
+      "description": "Approximate word count of the document content"
+    },
+    "dependencies_used": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Tools, templates, libraries, or MCP servers used in artifact generation (e.g. 'artifact-server', 'pandoc', 'latex-template-default')"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Cache run ID this artifact belongs to"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Agent ID that produced this artifact"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of artifact creation"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of most recent update to the artifact or its manifest entry"
+    }
+  }
+}

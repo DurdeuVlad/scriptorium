@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "sync_manifest.schema.json",
+  "title": "Sync Manifest",
+  "description": "Record of a sync operation between this repo and a source framework repo or style pack. Lists every item that was applied, skipped, or conflicted. No silent overwrites — every change is traceable through this manifest.",
+  "type": "object",
+  "required": ["manifest_id", "sync_direction", "source", "items", "created_at"],
+  "properties": {
+    "manifest_id": {
+      "type": "string",
+      "description": "Unique identifier for this sync operation"
+    },
+    "sync_direction": {
+      "type": "string",
+      "enum": ["import", "export", "bidirectional"],
+      "description": "Direction of the sync: import=source→local, export=local→source, bidirectional=both"
+    },
+    "source": {
+      "type": "string",
+      "description": "Path or identifier of the source repo or pack"
+    },
+    "target": {
+      "type": "string",
+      "description": "Path or identifier of the target repo (defaults to current repo if not specified)"
+    },
+    "scope": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Categories included in this sync scope (e.g. 'doctrine', 'style-packs', 'commands', 'guides', 'all')"
+    },
+    "conflict_resolution_mode": {
+      "type": "string",
+      "enum": ["ask", "prefer-local", "prefer-source"],
+      "description": "How conflicts were handled: ask=user was prompted, prefer-local=local version kept, prefer-source=source version applied"
+    },
+    "items": {
+      "type": "array",
+      "description": "Per-item record of every file or resource that was evaluated during sync",
+      "items": {
+        "type": "object",
+        "required": ["item_path", "status"],
+        "properties": {
+          "item_path": {
+            "type": "string",
+            "description": "File path of the item, relative to repo root"
+          },
+          "item_type": {
+            "type": "string",
+            "description": "Category of the item (e.g. 'doctrine', 'style-pack', 'command', 'guide', 'schema')"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["applied", "skipped", "conflict", "new", "identical"],
+            "description": "applied=change was written; skipped=intentionally not applied (see reason); conflict=both versions diverged and could not be auto-resolved; new=item exists only in source and was added; identical=no change needed"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Explanation for skipped or conflict status — required if status is skipped or conflict"
+          },
+          "local_version": {
+            "type": "string",
+            "description": "Hash, timestamp, or version identifier of the local version at time of sync"
+          },
+          "source_version": {
+            "type": "string",
+            "description": "Hash, timestamp, or version identifier of the source version at time of sync"
+          }
+        }
+      }
+    },
+    "applied_count": {
+      "type": "integer",
+      "description": "Total number of items with status=applied"
+    },
+    "skipped_count": {
+      "type": "integer",
+      "description": "Total number of items with status=skipped"
+    },
+    "conflict_count": {
+      "type": "integer",
+      "description": "Total number of items with status=conflict — all must be resolved for sync to be considered complete"
+    },
+    "compatibility_notes": {
+      "type": "string",
+      "description": "Notes on framework version compatibility, breaking changes encountered, or manual steps required after sync"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Agent ID that executed the sync (typically framework-sync-agent)"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of sync completion"
+    }
+  }
+}

@@ -1,0 +1,220 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "discovery_report.schema.json",
+  "title": "Discovery Report",
+  "description": "Complete discovery report assembled by discovery-orchestrator. Includes findings from discovery-agent, blocker classifications, and immediate next actions.",
+  "type": "object",
+  "required": ["run_id", "timestamp", "findings", "blockers", "immediate_next_actions"],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "description": "Cache run ID for this discovery run"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when discovery report was assembled"
+    },
+    "project_root": {
+      "type": "string",
+      "description": "Absolute path to the project root directory"
+    },
+    "task_description": {
+      "type": "string",
+      "description": "User's task description that triggered discovery"
+    },
+    "findings": {
+      "type": "object",
+      "description": "Raw findings from discovery-agent",
+      "required": ["found_context_items", "inferred_context", "gaps"],
+      "properties": {
+        "found_context_items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "file": { "type": "string" },
+              "type": { "type": "string" },
+              "summary": { "type": "string" }
+            }
+          }
+        },
+        "inferred_context": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "item": { "type": "string" },
+              "basis": { "type": "string" },
+              "confidence": { "type": "string", "enum": ["high", "medium", "low"] }
+            }
+          }
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "expected": { "type": "string" },
+              "location_checked": { "type": "string" },
+              "reason": { "type": "string" }
+            }
+          }
+        },
+        "style_pack_detected": {
+          "type": ["string", "null"]
+        },
+        "guides_available": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "artifacts_present": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "templates_available": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "domain": {
+      "type": "string",
+      "description": "Classified domain for this task (e.g., 'technical-writing', 'worldbuilding', 'general')"
+    },
+    "style_pack": {
+      "type": ["string", "null"],
+      "description": "Selected style pack for this task, or null if none selected"
+    },
+    "blockers": {
+      "type": "array",
+      "description": "Classified blockers using B1-B9 taxonomy",
+      "items": {
+        "type": "object",
+        "required": ["blocker_id", "classification", "description", "severity"],
+        "properties": {
+          "blocker_id": {
+            "type": "string",
+            "description": "Unique identifier for this blocker"
+          },
+          "classification": {
+            "type": "string",
+            "enum": [
+              "B1-missing-user-decision",
+              "B2-missing-repo-context",
+              "B3-missing-guide",
+              "B4-missing-source-material",
+              "B5-failed-toolchain",
+              "B6-artifact-export-failure",
+              "B7-schema-conflict",
+              "B8-canon-conflict",
+              "B9-validation-failure"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "description": "Specific description of what is blocked and why"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["blocking", "degraded"],
+            "description": "Severity level: blocking (halts work) or degraded (reduces quality)"
+          },
+          "impacted_scope": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Workflow stages or outputs that cannot proceed"
+          },
+          "resolution_required": {
+            "type": "string",
+            "description": "What is needed to resolve this blocker"
+          }
+        }
+      }
+    },
+    "immediate_next_actions": {
+      "type": "array",
+      "description": "Specific next actions based on discovery findings",
+      "items": {
+        "type": "object",
+        "required": ["action", "command"],
+        "properties": {
+          "action": {
+            "type": "string",
+            "description": "Description of the action (e.g., 'Write project brief')"
+          },
+          "command": {
+            "type": "string",
+            "description": "Executable command (e.g., '/write-brief')"
+          },
+          "blocked_by": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Blocker IDs that must be resolved before this action"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["high", "medium", "low"],
+            "description": "Priority level for this action"
+          }
+        }
+      }
+    },
+    "type1_assumptions": {
+      "type": "array",
+      "description": "Type 1 decisions made (infer and proceed)",
+      "items": {
+        "type": "object",
+        "required": ["decision", "basis"],
+        "properties": {
+          "decision": {
+            "type": "string",
+            "description": "What was decided"
+          },
+          "basis": {
+            "type": "string",
+            "description": "Why this was inferrable"
+          }
+        }
+      }
+    },
+    "type2_flags": {
+      "type": "array",
+      "description": "Type 2 decisions made (infer and flag)",
+      "items": {
+        "type": "object",
+        "required": ["decision", "reason", "override"],
+        "properties": {
+          "decision": {
+            "type": "string",
+            "description": "What was decided"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why this was chosen"
+          },
+          "override": {
+            "type": "string",
+            "description": "How to override this decision"
+          }
+        }
+      }
+    },
+    "resume_point_id": {
+      "type": "string",
+      "description": "Resume point ID created at end of discovery (post-discovery checkpoint)"
+    },
+    "artifacts": {
+      "type": "array",
+      "description": "Artifact IDs created during discovery",
+      "items": {
+        "type": "string"
+      }
+    },
+    "run_status": {
+      "type": "string",
+      "enum": ["completed", "paused"],
+      "description": "Run status after discovery: completed (no blocking blockers) or paused (blocking blockers exist)"
+    }
+  }
+}

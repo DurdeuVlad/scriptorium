@@ -1,0 +1,143 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "brief.schema.json",
+  "title": "Editorial Brief",
+  "description": "Structured brief defining the full scope, audience, constraints, and success criteria for a writing task. Required input for the outline workflow.",
+  "type": "object",
+  "required": ["brief_id", "title", "task_type", "audience", "purpose", "scope", "style_pack", "success_criteria", "constraints", "created_at"],
+  "properties": {
+    "brief_id": {
+      "type": "string",
+      "description": "Unique identifier for this brief"
+    },
+    "title": {
+      "type": "string",
+      "description": "Working title of the document to be produced"
+    },
+    "task_type": {
+      "type": "string",
+      "enum": ["general-writing", "internal-doc", "technical-explanation", "lore", "card-flavor", "design-doc", "other"],
+      "description": "Document category, used to select default style pack and workflow"
+    },
+    "audience": {
+      "type": "object",
+      "required": ["primary", "knowledge_level"],
+      "properties": {
+        "primary": {
+          "type": "string",
+          "description": "Description of the primary reader"
+        },
+        "secondary": {
+          "type": "string",
+          "description": "Optional secondary audience"
+        },
+        "knowledge_level": {
+          "type": "string",
+          "enum": ["novice", "intermediate", "expert", "mixed"],
+          "description": "Assumed knowledge level of the primary reader"
+        }
+      }
+    },
+    "purpose": {
+      "type": "string",
+      "description": "What this document accomplishes for the reader — not what it covers, but what it does"
+    },
+    "scope": {
+      "type": "object",
+      "required": ["description", "in_scope", "out_of_scope"],
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "One or two sentences describing the overall scope"
+        },
+        "in_scope": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Explicit list of topics, sections, or content items included in this task"
+        },
+        "out_of_scope": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Explicit list of topics or content that must not be included"
+        },
+        "estimated_length": {
+          "type": "string",
+          "description": "Rough target length (e.g. '800-1200 words', '4-6 pages')"
+        }
+      }
+    },
+    "style_pack": {
+      "type": "string",
+      "description": "Identifier of the style pack to apply (e.g. 'general-writing', 'lore-player-facing')"
+    },
+    "tone": {
+      "type": "string",
+      "description": "Specific tone instructions beyond the style pack defaults"
+    },
+    "success_criteria": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Enumerated criteria for what a successful output looks like — each item must be checkable, not vague"
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "description": "Required output format (e.g. 'markdown', 'docx', 'plain prose without headers')"
+        },
+        "max_words": {
+          "type": "integer",
+          "description": "Maximum word count hard limit"
+        },
+        "min_words": {
+          "type": "integer",
+          "description": "Minimum word count floor"
+        },
+        "required_sections": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Section titles or types that must be present in the output"
+        },
+        "forbidden_content": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Content, topics, or approaches explicitly prohibited"
+        },
+        "other": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Additional constraints not covered by other fields"
+        }
+      }
+    },
+    "source_material": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of available source documents, file paths, or guide IDs"
+    },
+    "canon_references": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Canon guide IDs relevant to this brief — used by domain QA and section drafters"
+    },
+    "open_questions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Unresolved questions at brief time — non-blocking items are documented here; blocking items must be resolved before brief approval"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Agent ID that created this brief"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of brief creation"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Cache run ID this brief belongs to — used for session traceability"
+    }
+  }
+}

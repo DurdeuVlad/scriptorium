@@ -1,0 +1,21 @@
+{
+  "name": "@editorial-orchestrator/guide-server",
+  "version": "1.0.0",
+  "description": "SQLite-backed MCP server for guide record storage, FTS search, and guide linking",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "seed": "node src/seed.js",
+    "setup": "node src/setup.js",
+    "test": "node src/test.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "better-sqlite3": "^12.10.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT"
+}

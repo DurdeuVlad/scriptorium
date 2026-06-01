@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "research_report.schema.json",
+  "title": "Research Report",
+  "description": "Structured summary of gathered research, including sources, findings, gaps, and canon conflicts. Consumed by brief-writer and section drafters.",
+  "type": "object",
+  "required": ["report_id", "topic", "findings", "source_gaps", "created_at"],
+  "properties": {
+    "report_id": {
+      "type": "string",
+      "description": "Unique identifier for this research report"
+    },
+    "topic": {
+      "type": "string",
+      "description": "Primary topic or subject of the research"
+    },
+    "brief_id": {
+      "type": "string",
+      "description": "ID of the brief this research supports, if applicable"
+    },
+    "research_questions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "The discrete questions this research was designed to answer"
+    },
+    "findings": {
+      "type": "array",
+      "description": "Structured list of research findings — each finding maps to one or more research questions",
+      "items": {
+        "type": "object",
+        "required": ["finding", "confidence", "source"],
+        "properties": {
+          "finding": {
+            "type": "string",
+            "description": "The claim or fact established by this finding — stated as a direct assertion"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["high", "medium", "low", "unverified"],
+            "description": "Confidence level: high = verified against authoritative source, medium = supported by secondary source, low = inferred, unverified = reported but not confirmed"
+          },
+          "source": {
+            "type": "string",
+            "description": "Source citation — file path, guide ID, or external reference"
+          },
+          "canon_guide_id": {
+            "type": "string",
+            "description": "ID of the canon guide this finding aligns with, if applicable"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Additional context, caveats, or usage guidance for this finding"
+          }
+        }
+      }
+    },
+    "source_gaps": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Research questions that could not be answered — stated specifically enough for the user to supply the missing information"
+    },
+    "canon_conflicts": {
+      "type": "array",
+      "description": "Claims found in sources that conflict with established canon guides",
+      "items": {
+        "type": "object",
+        "required": ["claim", "conflicts_with"],
+        "properties": {
+          "claim": {
+            "type": "string",
+            "description": "The conflicting claim as found in the source"
+          },
+          "conflicts_with": {
+            "type": "string",
+            "description": "Canon guide ID or specific canon statement that this claim contradicts"
+          },
+          "resolution": {
+            "type": "string",
+            "description": "Proposed or confirmed resolution — leave blank if unresolved (escalation required)"
+          }
+        }
+      }
+    },
+    "ready_for_brief": {
+      "type": "boolean",
+      "description": "True if all research questions are answered or documented gaps are non-blocking; false if blocking gaps remain"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Agent ID that produced this report"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of report creation"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Cache run ID this report belongs to"
+    }
+  }
+}

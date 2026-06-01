@@ -1,0 +1,159 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "import_pack.schema.json",
+  "title": "Import Pack Manifest",
+  "description": "Manifest for an imported framework content pack. Records import operation, conflict resolution, and applied transformations.",
+  "type": "object",
+  "required": ["import_id", "pack_id", "import_status", "items", "created_at"],
+  "properties": {
+    "import_id": {
+      "type": "string",
+      "description": "Unique identifier for this import operation"
+    },
+    "pack_id": {
+      "type": "string",
+      "description": "ID of the pack being imported (from export_pack manifest)"
+    },
+    "pack_source": {
+      "type": "string",
+      "description": "Path or URL to the source pack"
+    },
+    "import_status": {
+      "type": "string",
+      "enum": ["pending", "in-progress", "completed", "completed-with-conflicts", "failed"],
+      "description": "Status of import operation"
+    },
+    "import_mode": {
+      "type": "string",
+      "enum": ["full", "selective", "merge"],
+      "description": "full=import entire pack, selective=import specific items only, merge=merge with existing content"
+    },
+    "conflict_resolution_mode": {
+      "type": "string",
+      "enum": ["ask", "prefer-local", "prefer-source", "merge"],
+      "description": "How conflicts were resolved during import"
+    },
+    "selected_items": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of item paths selected for import (only for selective import mode)"
+    },
+    "items": {
+      "type": "array",
+      "description": "Per-item record of import operation",
+      "items": {
+        "type": "object",
+        "required": ["item_path", "import_status"],
+        "properties": {
+          "item_path": {
+            "type": "string",
+            "description": "Path to item in pack"
+          },
+          "target_path": {
+            "type": "string",
+            "description": "Destination path in local repo"
+          },
+          "import_status": {
+            "type": "string",
+            "enum": ["imported", "skipped", "conflict", "transformed", "failed"],
+            "description": "Status of this item's import"
+          },
+          "conflict_type": {
+            "type": "string",
+            "enum": ["content-diverged", "version-mismatch", "schema-incompatible", "dependency-missing"],
+            "description": "Type of conflict if import_status=conflict"
+          },
+          "resolution": {
+            "type": "string",
+            "description": "How conflict was resolved (if applicable)"
+          },
+          "transformation_applied": {
+            "type": "string",
+            "description": "Migration rule or transformation applied during import"
+          },
+          "local_version_hash": {
+            "type": "string",
+            "description": "Hash of local version before import (if item existed)"
+          },
+          "imported_version_hash": {
+            "type": "string",
+            "description": "Hash of imported version"
+          }
+        }
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "description": "List of unresolved conflicts requiring manual resolution",
+      "items": {
+        "type": "object",
+        "required": ["item_path", "conflict_type", "local_version", "source_version"],
+        "properties": {
+          "item_path": {
+            "type": "string",
+            "description": "Path to conflicting item"
+          },
+          "conflict_type": {
+            "type": "string",
+            "description": "Type of conflict"
+          },
+          "local_version": {
+            "type": "string",
+            "description": "Local version content or hash"
+          },
+          "source_version": {
+            "type": "string",
+            "description": "Source version content or hash"
+          },
+          "resolution_required": {
+            "type": "boolean",
+            "description": "Whether this conflict must be resolved before import can complete"
+          }
+        }
+      }
+    },
+    "imported_count": {
+      "type": "integer",
+      "description": "Number of items successfully imported"
+    },
+    "skipped_count": {
+      "type": "integer",
+      "description": "Number of items skipped"
+    },
+    "conflict_count": {
+      "type": "integer",
+      "description": "Number of items with unresolved conflicts"
+    },
+    "compatibility_check": {
+      "type": "object",
+      "properties": {
+        "framework_version_compatible": {
+          "type": "boolean",
+          "description": "Whether pack framework version is compatible with local framework"
+        },
+        "dependencies_satisfied": {
+          "type": "boolean",
+          "description": "Whether all pack dependencies are available locally"
+        },
+        "schema_compatible": {
+          "type": "boolean",
+          "description": "Whether pack schemas are compatible with local schemas"
+        },
+        "warnings": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Compatibility warnings"
+        }
+      }
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Agent or user that performed the import"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of import operation"
+    }
+  }
+}
