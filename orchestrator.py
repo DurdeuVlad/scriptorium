@@ -81,6 +81,28 @@ def get_llm():
         return None
 
 
+def extract_text(content: Any) -> str:
+    """Extracts text content as a string, handling both string and list responses from the LLM client."""
+    if isinstance(content, str):
+        return content
+    elif isinstance(content, list):
+        parts = []
+        for part in content:
+            if isinstance(part, str):
+                parts.append(part)
+            elif isinstance(part, dict):
+                parts.append(part.get("text", ""))
+            elif hasattr(part, "text"):
+                parts.append(part.text)
+            elif hasattr(part, "content"):
+                parts.append(part.content)
+            else:
+                parts.append(str(part))
+        return "".join(parts)
+    else:
+        return str(content)
+
+
 # ==========================================
 # 3. Newsroom Node Implementations
 # ==========================================
@@ -106,7 +128,8 @@ async def write_brief(state: NewsroomState) -> Dict[str, Any]:
     response = await llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)])
     try:
         # BUG FIX: strip markdown fences that LLMs like Gemini often wrap JSON in
-        raw = response.content.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+        raw_content = extract_text(response.content)
+        raw = raw_content.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
         brief_data = json.loads(raw)
     except Exception as e:
         print(f"[write_brief] JSON parse failed ({e}), using fallback brief.")
@@ -134,7 +157,8 @@ async def write_outline(state: NewsroomState) -> Dict[str, Any]:
     response = await llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)])
     try:
         # BUG FIX: strip markdown fences
-        raw = response.content.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+        raw_content = extract_text(response.content)
+        raw = raw_content.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
         outline_data = json.loads(raw)
         # BUG FIX: ensure sections array exists
         if "sections" not in outline_data:
@@ -194,7 +218,7 @@ async def staff_writer(state: NewsroomState) -> Dict[str, Any]:
                 sys_prompt = "You are the Staff Writer. Write the prose draft for this section using provided facts. Output raw Markdown."
                 user_prompt = f"Section: {title}\nGoal: {goal}\nFacts context:\n{facts_context}"
                 response = await llm.ainvoke([SystemMessage(content=sys_prompt), HumanMessage(content=user_prompt)])
-                manuscript[sid] = response.content
+                manuscript[sid] = extract_text(response.content)
         elif section_tickets:
             # Revision Pass
             print(f"Revising {title} based on edit memo...")
@@ -205,7 +229,7 @@ async def staff_writer(state: NewsroomState) -> Dict[str, Any]:
                     sys_prompt = "You are the Staff Writer. Revise the provided text to resolve the edit ticket feedback."
                     user_prompt = f"Original Text:\n{manuscript[sid]}\n\nEdit Ticket:\n{ticket.description}\nSuggested Fix: {ticket.suggested_fix}"
                     response = await llm.ainvoke([SystemMessage(content=sys_prompt), HumanMessage(content=user_prompt)])
-                    manuscript[sid] = response.content
+                    manuscript[sid] = extract_text(response.content)
                 # BUG FIX: Pydantic v2 models are immutable; mutating ticket.resolved is silently dropped.
                 # We need to rebuild the editorial_memo list with resolved flags updated.
         
@@ -242,7 +266,7 @@ async def pattern_scrubber(state: NewsroomState) -> Dict[str, Any]:
             sys_prompt = "You are the Pattern Scrubber. Remove any robotic transitions, repetitive rhythms, and wordy AI phrasing."
             user_prompt = f"Clean this text:\n{cleaned}"
             response = await llm.ainvoke([SystemMessage(content=sys_prompt), HumanMessage(content=user_prompt)])
-            manuscript[sid] = response.content
+            manuscript[sid] = extract_text(response.content)
         else:
             manuscript[sid] = cleaned
             
