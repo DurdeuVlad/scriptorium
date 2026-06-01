@@ -455,3 +455,179 @@
 .chat-input-row button:hover {
   background-color: var(--accent-hover);
 }
+
+/* ── Projects Panel ─────────────────────────────────────────────────────── */
+
+.projects-panel {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.projects-header {
+  padding: 12px 16px !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-new-project {
+  background: transparent;
+  border: 1px solid var(--accent-color);
+  color: var(--accent-hover);
+  border-radius: 5px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: background-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-new-project:hover {
+  background-color: var(--accent-color);
+  color: #fff;
+}
+
+/* New project form */
+.new-project-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px 16px;
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  animation: slideDown 0.15s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.new-project-form label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+}
+
+.new-project-form textarea,
+.new-project-form input,
+.new-project-form select {
+  width: 100%;
+  padding: 8px 10px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.new-project-form textarea {
+  resize: none;
+  height: 64px;
+}
+
+.new-project-form textarea:focus,
+.new-project-form input:focus,
+.new-project-form select:focus {
+  border-color: var(--accent-color);
+}
+
+.new-project-form .btn-primary {
+  margin-top: 4px;
+  font-size: 12px;
+  padding: 8px;
+}
+
+/* Project list */
+.project-list {
+  list-style: none;
+  padding: 8px 0;
+  margin: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.project-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background-color 0.15s, border-color 0.15s;
+  border-radius: 0 6px 6px 0;
+  margin-right: 6px;
+}
+
+.project-item:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.project-item.active {
+  background-color: var(--accent-light);
+  border-left-color: var(--accent-color);
+}
+
+.project-dot {
+  font-size: 10px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.project-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0; /* allow text-overflow */
+}
+
+.project-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-item.active .project-name {
+  color: var(--accent-hover);
+}
+
+.project-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.btn-delete-project {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.btn-delete-project:hover {
+  color: var(--danger-color);
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
