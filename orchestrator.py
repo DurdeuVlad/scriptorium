@@ -76,7 +76,8 @@ def get_planner_llm():
         return ChatAnthropic(model="claude-opus-4-5", temperature=0.1)
     elif os.getenv("GEMINI_API_KEY"):
         from langchain_google_genai import ChatGoogleGenerativeAI
-        model = os.getenv("GEMINI_PLANNER_MODEL", "gemini-2.5-pro")
+        # Prod: gemini-3.5-flash | Testing: gemini-2.5-pro
+        model = os.getenv("GEMINI_PLANNER_MODEL", "gemini-3.5-flash")
         print(f"[LLM] Planner using: {model}")
         return ChatGoogleGenerativeAI(model=model, temperature=0.1, google_api_key=os.getenv("GEMINI_API_KEY"))
     else:
@@ -94,7 +95,8 @@ def get_executor_llm():
         return ChatAnthropic(model="claude-sonnet-4-5", temperature=0.3)
     elif os.getenv("GEMINI_API_KEY"):
         from langchain_google_genai import ChatGoogleGenerativeAI
-        model = os.getenv("GEMINI_EXECUTOR_MODEL", "gemini-2.5-flash")
+        # Prod: gemini-3.1-flash-lite | Testing: gemini-2.5-flash
+        model = os.getenv("GEMINI_EXECUTOR_MODEL", "gemini-3.1-flash-lite")
         print(f"[LLM] Executor using: {model}")
         return ChatGoogleGenerativeAI(model=model, temperature=0.3, google_api_key=os.getenv("GEMINI_API_KEY"))
     else:
