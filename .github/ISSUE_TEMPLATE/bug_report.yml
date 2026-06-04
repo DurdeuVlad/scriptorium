@@ -1,0 +1,45 @@
+name: Bug report (app)
+description: Something broken in the Scriptorium UI or API
+title: "[app] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Do **not** paste API keys or `.env` contents.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. python -m uvicorn app:app ...
+        2. cd frontend && npm run dev
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Branch or commit
+      placeholder: main @ abc1234
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: How you run it
+      options:
+        - Local (uvicorn + vite)
+        - Docker dev profile
+        - Docker prod profile
+        - Other

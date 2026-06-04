@@ -1,0 +1,29 @@
+name: Framework / command issue
+description: Problem with a slash command, agent spec, schema, or MCP server
+title: "[framework] "
+labels:
+  - framework
+body:
+  - type: input
+    id: command
+    attributes:
+      label: Command or agent (if applicable)
+      placeholder: /write-brief, brief-writer, guide-server
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Repo context (domain, style pack, phase)
+  - type: checkboxes
+    id: mcp
+    attributes:
+      label: MCP servers running?
+      options:
+        - label: guide-server
+        - label: cache-server
+        - label: artifact-server
