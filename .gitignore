@@ -22,6 +22,7 @@ ENV/
 .env
 .env.local
 .env.*.local
+.cursor/mcp.json
 
 # ── Databases (runtime artefacts, never commit) ──────────────────────────
 *.db
@@ -32,11 +33,23 @@ db/
 
 # ── Generated document artefacts ─────────────────────────────────────────
 artifacts/
+projects/
+projects.db
 logs/
+
+# ── Playwright MCP session dumps (local QA only) ───────────────────────
+.playwright-mcp/
+ux-*.yml
+
+# ── IDE local settings (machine-specific paths) ──────────────────────────
+.claude/settings.local.json
+.codex/settings.local.json
+.windsurf/settings.local.json
 
 # ── Node / frontend ──────────────────────────────────────────────────────
 node_modules/
 package-lock.json
+!frontend/package-lock.json
 yarn.lock
 frontend/node_modules/
 frontend/dist/
