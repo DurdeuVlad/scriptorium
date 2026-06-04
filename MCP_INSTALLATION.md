@@ -248,15 +248,15 @@ Add to your MCP configuration file (e.g., Claude Desktop config):
   "mcpServers": {
     "guide-server": {
       "command": "node",
-      "args": ["C:/path/to/ai-writing-framework/mcp/guide-server/src/server.js"]
+      "args": ["C:/path/to/scriptorium/mcp/guide-server/src/server.js"]
     },
     "cache-server": {
       "command": "node",
-      "args": ["C:/path/to/ai-writing-framework/mcp/cache-server/src/server.js"]
+      "args": ["C:/path/to/scriptorium/mcp/cache-server/src/server.js"]
     },
     "artifact-server": {
       "command": "node",
-      "args": ["C:/path/to/ai-writing-framework/mcp/artifact-server/src/server.js"]
+      "args": ["C:/path/to/scriptorium/mcp/artifact-server/src/server.js"]
     }
   }
 }

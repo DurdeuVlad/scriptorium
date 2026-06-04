@@ -138,5 +138,5 @@ The framework works for **any writing domain** out of the box:
 
 ## Repository
 
-**GitHub:** https://github.com/DurdeuVlad/ai-writing-framework  
+**GitHub:** https://github.com/DurdeuVlad/scriptorium  
 **Status:** Phases 11-12 implemented, verification pending

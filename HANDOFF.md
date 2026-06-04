@@ -32,7 +32,7 @@ The framework supports autonomous agents producing high-quality documents throug
 ## Repository Layout
 
 ```
-ai-writing-framework/
+scriptorium/
   README.md                        System overview
   ROADMAP.md                       Phase status tracker (update when phases complete)
   ARCHITECTURE.md                  Full layer/agent/command/schema specification (629 lines)

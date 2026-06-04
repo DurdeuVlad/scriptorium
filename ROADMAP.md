@@ -2,6 +2,8 @@
 
 Six implementation phases from foundational scaffolding to a fully operational, portable editorial orchestration system.
 
+**Documentation note (2026-06):** Phases 1–6 and 11–12 are implemented per [PRODUCTION_READINESS_PLAN.md](PRODUCTION_READINESS_PLAN.md). Phases 7–8 below list the **full command surface**; `mcp/artifact-server` and sync/import commands exist as infrastructure—end-to-end `/orchestrate-artifact` and hosted production paths are still maturing. Public status: **alpha** (see [README.md](README.md#project-status-alpha)).
+
 ---
 
 ## Phase 1 — Foundation and Doctrine
@@ -339,7 +341,7 @@ See `docs/EXTENDING_THE_FRAMEWORK.md` for complete customization guide.
 
 ## Phase 7 — Artifact System and MCP
 
-**Status:** PLANNED
+**Status:** INFRASTRUCTURE COMPLETE — orchestration and export paths still maturing
 
 **Objective:** Make artifact generation and export operational. The system must be able to produce publication-ready files in all supported formats from the same production pipeline.
 
@@ -364,7 +366,7 @@ See `docs/EXTENDING_THE_FRAMEWORK.md` for complete customization guide.
 
 ## Phase 8 — Sync and Portability
 
-**Status:** PLANNED
+**Status:** INFRASTRUCTURE COMPLETE — migration and upgrade flows still maturing
 
 **Objective:** Make the framework portable. Doctrine, style packs, guide records, and commands must be exportable from this repo and importable into any compatible repository.
 

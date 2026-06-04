@@ -28,7 +28,7 @@
 ## Directory Map
 
 ```
-ai-writing-framework/
+scriptorium/
 ├── .writing-framework/          # Framework core (canonical definitions)
 │   ├── agents/                  # Agent specifications
 │   ├── commands/                # Command specifications

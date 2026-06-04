@@ -1,8 +1,10 @@
 # Production Readiness Plan
 
 **Current Status:** Phases 11-12 Implemented, Verification Pending ✅  
-**Production Status:** NOT READY ❌  
+**Production Status:** NOT READY ❌ (public **alpha** — see [README.md](README.md#project-status-alpha))  
 **Target:** Fully operational writing system ready for import into any project
+
+**Note:** [ROADMAP.md](ROADMAP.md) phases 7–8 are labeled *infrastructure complete* here; full orchestrate-artifact and sync upgrade automation remain verification targets, not blockers for open-source preview.
 
 ---
 
@@ -366,8 +368,8 @@ The core framework (Phases 11-12) is **production-ready for all domains** withou
 
 **Step 1: Clone Repository**
 ```bash
-git clone https://github.com/DurdeuVlad/ai-writing-framework
-cd ai-writing-framework
+git clone https://github.com/DurdeuVlad/scriptorium.git
+cd scriptorium
 ```
 
 **Step 2: Install MCP Servers**

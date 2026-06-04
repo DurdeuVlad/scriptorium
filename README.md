@@ -1,133 +1,171 @@
-# 🏛️ Scriptorium
+# Scriptorium
 
-**An AI-powered multi-agent editorial newsroom for long-form document production.**
+**Open-source multi-agent editorial newsroom and portable writing framework for Cursor, Codex, Windsurf, and Copilot.**
 
-Scriptorium orchestrates a full editorial pipeline — from brief to polished manuscript — using a team of specialized AI agents coordinated through a LangGraph state machine and served through a real-time React UI.
+![Scriptorium workspace](docs/screenshots/scriptorium-site.png)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Node 18+](https://img.shields.io/badge/node-18+-green.svg)](https://nodejs.org/)
+[![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](PRODUCTION_READINESS_PLAN.md)
 
 ---
 
-## ✨ What it does
+## Who this is for
 
-You give Scriptorium a topic, a target audience, and a domain pack. It runs the document through a complete newsroom pipeline:
+- **Authors and editors** producing long-form technical or narrative work who want a structured newsroom pipeline, not a single chat thread.
+- **Teams building agent workflows** who need schemas, quality gates, specialized agents, and MCP-backed memory—not another “write better” system prompt.
+
+---
+
+## Two ways to use this repo
+
+| Path | You get | Success in ~5 minutes |
+|------|---------|------------------------|
+| **[Run the app](docs/APP.md)** | React workspace + FastAPI + LangGraph | Brief and outline in **Plan**, approve, see a chapter in **Draft** |
+| **[Adopt the framework](docs/FRAMEWORK.md)** | Commands, agents, doctrine, MCP servers | `/discovery` → `/write-brief` with schema-valid outputs |
+
+Canonical command specs live in [`.writing-framework/commands/`](.writing-framework/commands/). IDE folders (`.claude/`, `.codex/`, etc.) are **adapters**—edit the framework first, then sync adapters if needed.
+
+---
+
+## Why not just Cursor rules?
+
+- **Schemas and gates** — Brief, outline, and QA outputs must validate; phases do not advance on vibes.
+- **Specialized agents** — Commissioning, outline, staff writer, fact-check, managing editor, and more—each with a bounded scope.
+- **Durable context** — MCP guide-server, cache-server, and artifact-server for guides, run memory, and exports.
+
+See [docs/GUIDELINES.md](docs/GUIDELINES.md) for contributor lanes and proof requirements.
+
+---
+
+## Newsroom pipeline (app)
+
+You describe a document, audience, and writing mode. The newsroom runs:
 
 | Phase | Agent | Role |
-|---|---|---|
-| **Brief** | Commissioning Editor | Defines tone, goal, constraints |
-| **Outline** | Outline Architect | Plans chapter structure |
-| **Negotiate** | You | Review & approve the outline |
-| **Draft** | Staff Writer | Writes all sections using RDF fact context |
-| **Scrub** | Pattern Scrubber | Removes AI-stink, em-dashes, filler |
-| **Copyedit** | Copyeditor | Checks voice, style, persona alignment |
-| **Fact-check** | Fact-Checker | Audits claims against the RDF Fact Graph |
-| **Compliance** | Compliance Officer | Checks against a separate Compliance RDF DB |
-| **Creative** | Resonance Critic | Checks narrative pacing and emotional feel |
-| **Gate** | Managing Editor | Signs off or sends back to drafting |
+|-------|-------|------|
+| **Brief** | Commissioning Editor | Tone, goal, constraints |
+| **Outline** | Outline Architect | Chapter structure |
+| **Negotiate** | You | **Plan** tab + assistant approval |
+| **Draft** | Staff Writer | Sections with fact context |
+| **Scrub** | Pattern Scrubber | AI-stink and filler |
+| **Copyedit** | Copyeditor | Voice and style |
+| **Fact-check** | Fact-Checker | RDF fact graph |
+| **Compliance** | Compliance Officer | Compliance RDF |
+| **Creative** | Resonance Critic | Pacing and feel |
+| **Gate** | Managing Editor | Sign-off or revision loop |
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                     Scriptorium UI                      │
-│              React + Vite  (port 5173)                  │
+│              React UI (Vite, port 5173 dev)              │
+│         Plan | Draft | Preview  +  project sidebar       │
 └────────────────────┬────────────────────────────────────┘
-                     │ WebSocket
+                     │  /api REST  +  /ws WebSocket
 ┌────────────────────▼────────────────────────────────────┐
-│                   FastAPI Backend                        │
-│                   app.py  (port 8000)                   │
-└────────────────────┬────────────────────────────────────┘
-                     │
-┌────────────────────▼────────────────────────────────────┐
-│              LangGraph Orchestrator                      │
-│              orchestrator.py                            │
-│  ┌──────────┐  ┌───────────┐  ┌────────────────────┐   │
-│  │ Semantic │  │Compliance │  │  LLM (Gemini/GPT/  │   │
-│  │ RDF DB   │  │ RDF DB    │  │     Anthropic)     │   │
-│  │(SQLite)  │  │(SQLite)   │  └────────────────────┘   │
-│  └──────────┘  └───────────┘                           │
+│                   FastAPI (app.py)                       │
+│              LangGraph (orchestrator.py)                 │
+│   projects/<id>/artifacts/*.md  +  projects.db           │
 └─────────────────────────────────────────────────────────┘
 ```
 
+Framework and MCP layers: [docs/FRAMEWORK.md](docs/FRAMEWORK.md) · Full layers: [ARCHITECTURE.md](ARCHITECTURE.md)
+
 ---
 
-## 🚀 Getting started
+## Quick start — app
 
-### Prerequisites
-- Python 3.11+
-- Node 18+
-- A Gemini / OpenAI / Anthropic API key
-
-### Setup
+**Prerequisites:** Python 3.11+, Node 18+, a Gemini / OpenAI / Anthropic API key.
 
 ```bash
-# 1. Clone
-git clone https://github.com/youruser/scriptorium.git
+git clone https://github.com/DurdeuVlad/scriptorium.git
 cd scriptorium
 
-# 2. Python backend
 pip install -r requirements.txt
 cp .env.example .env   # add your API key
 
-# 3. Frontend
-cd frontend
-npm install
+cd frontend && npm ci
+```
 
-# 4. Run both servers
-# Terminal A:
-python -m uvicorn app:app --reload
+**Two terminals:**
 
-# Terminal B:
+```bash
+# Terminal A — API
+python -m uvicorn app:app --reload --port 8000
+
+# Terminal B — UI
 cd frontend && npm run dev
 ```
 
-Open **http://localhost:5173** and commission your first document.
+Open **http://localhost:5173** → **+ New** → review **Plan** → approve in the **Assistant** → open chapters under **Draft**.
+
+Docker: [docs/APP.md](docs/APP.md#docker). API details: same doc.
 
 ---
 
-## 📁 Project structure
+## Quick start — framework
 
-```
-scriptorium/
-├── app.py              # FastAPI + WebSocket server
-├── orchestrator.py     # LangGraph agents & state machine
-├── semantic_db.py      # SQLite-backed RDF fact store
-├── compliance_db.py    # Separate compliance RDF database
-├── mcp_client.py       # MCP tool integration
-├── requirements.txt
-├── .env
-├── artifacts/          # Generated .md chapter files
-├── db/                 # SQLite databases
-└── frontend/           # Vite + React UI
-    ├── src/
-    │   ├── App.jsx
-    │   ├── App.css
-    │   └── index.css
-    └── index.html
-```
+1. Copy or install [`.writing-framework/`](.writing-framework/) into your repo (see `/install-framework` in [COMMAND_REGISTRY.md](.writing-framework/commands/COMMAND_REGISTRY.md)).
+2. Register MCP servers under [`mcp/`](mcp/) per [MCP_INSTALLATION.md](MCP_INSTALLATION.md).
+3. In your AI tool: run **`/discovery`**, then **`/write-brief`**, validate against [`.writing-framework/schemas/`](.writing-framework/schemas/).
+4. Prove changes with [evals/cases/case-01-technical-docs.md](evals/cases/case-01-technical-docs.md).
+
+Full walkthrough: [QUICK_START.md](QUICK_START.md)
 
 ---
 
-## 🔑 Environment variables
+## Documentation map
 
-| Variable | Description |
-|---|---|
-| `GEMINI_API_KEY` | Google Gemini API key |
-| `GEMINI_MODEL` | Model name (default: `gemini-2.5-flash`) |
-| `OPENAI_API_KEY` | OpenAI API key (alternative) |
-| `ANTHROPIC_API_KEY` | Anthropic API key (alternative) |
+| Doc | Contents |
+|-----|----------|
+| [docs/APP.md](docs/APP.md) | REST/WS API, Docker, env vars, UI smoke |
+| [docs/FRAMEWORK.md](docs/FRAMEWORK.md) | Layers, MCP, commands, install |
+| [docs/GUIDELINES.md](docs/GUIDELINES.md) | Human contributor checklist |
+| [docs/FAQ.md](docs/FAQ.md) | Common questions |
+| [AGENTS.md](AGENTS.md) | Agent operating manual |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | PR workflow |
+| [ROADMAP.md](ROADMAP.md) | Phase history and plans |
+| [PRODUCTION_READINESS_PLAN.md](PRODUCTION_READINESS_PLAN.md) | Alpha status and verification gaps |
+
+---
+
+## Project status (alpha)
+
+| Layer | Maturity |
+|-------|----------|
+| App UI + local run | Runnable; no auth |
+| LangGraph pipeline | Core agents wired; guide-server not yet in live prompts |
+| Framework specs | Broad command/agent coverage; end-to-end eval proof pending |
+| Hosted production | Not ready |
+
+**Validation:** Framework path targets [case-01](evals/cases/case-01-technical-docs.md); publish baseline scores in [evals/BASELINE_COMPARISON.md](evals/BASELINE_COMPARISON.md) when available.
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap (high level)
 
-- [ ] Export to DOCX / PDF
-- [ ] Redis caching layer between LLM calls
-- [ ] Multi-document project management
-- [ ] User accounts & run history
-- [ ] Custom domain packs (Legal, Medical, Fiction)
-- [ ] Inline outline negotiation via chat
+- [x] Multi-project app, Plan/Draft/Preview, Docker, Playwright smoke
+- [x] Framework phases 1–12 implemented (verification in progress)
+- [ ] Wire guide-server into LangGraph prompts
+- [ ] Multi-session “continue chapter N”
+- [ ] Auth and hosted deployment
+
+Details: [ROADMAP.md](ROADMAP.md)
 
 ---
+
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md), [docs/GUIDELINES.md](docs/GUIDELINES.md), and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Security: [SECURITY.md](SECURITY.md).
+
+---
+
+## License
+
+[MIT](LICENSE) — Copyright (c) 2026 Scriptorium
 
 *Scriptorium — where every word earns its place.*

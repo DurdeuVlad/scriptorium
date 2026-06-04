@@ -45,8 +45,8 @@ The **Editorial Orchestrator** is a framework for AI agents to produce high-qual
 ### 1. Explore the Framework
 ```bash
 # Clone repository
-git clone https://github.com/DurdeuVlad/ai-writing-framework
-cd ai-writing-framework
+git clone https://github.com/DurdeuVlad/scriptorium.git
+cd scriptorium
 
 # Read key documentation
 cat README.md
@@ -235,7 +235,7 @@ node src/seed.js
 ## Directory Structure
 
 ```
-ai-writing-framework/
+scriptorium/
 ├── .writing-framework/     # Canonical specs (source of truth)
 │   ├── doctrine/           # 14 doctrine files
 │   ├── schemas/            # 15 JSON schemas
@@ -337,7 +337,7 @@ Structured data formats: brief, outline, discovery_report, review_report, blocke
 
 ## Resources
 
-- **Repository:** https://github.com/DurdeuVlad/ai-writing-framework
+- **Repository:** https://github.com/DurdeuVlad/scriptorium
 - **Phase 11 Spec:** `docs/PHASE11_SPECIFICATION.md`
 - **Phase 12 Spec:** `docs/PHASE12_SPECIFICATION.md`
 - **Extension Guide:** `docs/EXTENDING_THE_FRAMEWORK.md`

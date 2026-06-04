@@ -26,6 +26,10 @@ The system is organized into six functional layers: the Public Layer (commands t
 
 General writing, internal documentation, technical-adjacent explanations, D&D and worldbuilding, card game writing, structured creative design docs.
 
+### Runtime app UI (Scriptorium workspace)
+
+When changing the React workspace (`frontend/`), prefer **Penpot-first** design iteration via MCP ([docs/PENPOT_MCP.md](docs/PENPOT_MCP.md), [docs/design/SCRIPTORIUM_PENPOT_BRIEF.md](docs/design/SCRIPTORIUM_PENPOT_BRIEF.md)), then implement tokens and layout, then **run manual QA via Playwright MCP** (agent-driven: navigate, snapshot, click, judge — see [tests/manual/MCP_AGENT_WORKFLOW.md](tests/manual/MCP_AGENT_WORKFLOW.md) and [docs/UI_REVIEW.md](docs/UI_REVIEW.md)). Include **persona scenarios** ([tests/manual/PERSONAS.md](tests/manual/PERSONAS.md), [14-persona-journeys.md](tests/manual/14-persona-journeys.md), [15-adversarial-stress.md](tests/manual/15-adversarial-stress.md)): two-pass in-character then verifier; log `MT-###` and `UX-###` in [tests/manual/](tests/manual/). Optional headless helpers: `npm run ui-smoke` — not a substitute for MCP manual walks. Do not commit Penpot MCP keys in the repository.
+
 ---
 
 ## Section 2: Before Every Task

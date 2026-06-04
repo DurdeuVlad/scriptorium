@@ -4,7 +4,7 @@ All contributions must respect the editorial pipeline and maintain schema compli
 
 ## Before You Contribute
 
-1. Read `README.md`, `ARCHITECTURE.md`, `QUICK_START.md`
+1. Read `README.md`, `docs/GUIDELINES.md`, `ARCHITECTURE.md`, `QUICK_START.md`
 2. Check `DECISIONS.md` for design choices
 3. Review relevant phase specification
 
@@ -22,6 +22,7 @@ All contributions must respect the editorial pipeline and maintain schema compli
 - Personal test artifacts (`.flux/sessions/*/build-notes.md`, `audit-report.md`, `qa-log.md`)
 - Database files or node_modules
 - Uncommitted temporary files
+- `.playwright-mcp/`, local IDE `settings.local.json`, Penpot/API tokens
 
 ## Workflow
 
