@@ -35,7 +35,7 @@ List projects: `GET /projects` or project switcher dropdown.
 ## Known limitations (do not file as app bugs)
 
 1. No React Router — refresh restores state via REST + `bind_project`, not browser history.
-2. **Export:** tries MCP `artifact-server` first (`scripts/start_penpot_mcp.ps1` is unrelated). If MCP is down, the API saves merged markdown under `projects/{id}/exports/` with `fallback: true` and a friendly message — sufficient for persona QA (UX-106). For production PDF/DOCX, start the artifact MCP server documented in [docs/PENPOT_MCP.md](../docs/PENPOT_MCP.md) or your local artifact-server setup.
+2. **Export:** may call an optional MCP `artifact-server` when configured. If unavailable, the API saves merged markdown under `projects/{id}/exports/` with `fallback: true` and a friendly message — sufficient for persona QA (UX-106). Production PDF/DOCX requires a working artifact export path (see framework MCP docs in [MCP_INSTALLATION.md](../../MCP_INSTALLATION.md)).
 3. `technical-docs` domain may inject commissioning blocker tickets (B1, B4) until resolved in chat.
 4. Plan PATCH returns **409** when phase is not in `negotiation`, `planning`, `idle`, `intake`, `review_halt`.
 

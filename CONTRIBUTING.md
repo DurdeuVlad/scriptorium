@@ -22,7 +22,7 @@ All contributions must respect the editorial pipeline and maintain schema compli
 - Personal test artifacts (`.flux/sessions/*/build-notes.md`, `audit-report.md`, `qa-log.md`)
 - Database files or node_modules
 - Uncommitted temporary files
-- `.playwright-mcp/`, local IDE `settings.local.json`, Penpot/API tokens
+- `.playwright-mcp/`, local IDE `settings.local.json`, API keys in MCP config
 
 ## Workflow
 

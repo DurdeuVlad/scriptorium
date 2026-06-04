@@ -1,6 +1,6 @@
 # Scriptorium manual test procedures
 
-Step-by-step manual QA for the React workspace (`frontend/src`). Each procedure has an **ID** (`MT-###`), observable **expected results**, and optional **Playwright** selectors for automation or agent verification.
+Step-by-step manual QA for the React workspace (`frontend/src`). Each procedure has an **ID** (`MT-###`), observable **expected results**, and optional **Playwright** selectors for automation or scripted checks.
 
 ## Prerequisites
 
@@ -10,27 +10,19 @@ Step-by-step manual QA for the React workspace (`frontend/src`). Each procedure 
 
 See [00-prerequisites.md](00-prerequisites.md) for detail.
 
-## How to run manual QA (canonical: Playwright MCP + agent)
+## How to run manual QA
 
-**Use an AI agent in Cursor with the Playwright MCP server** — not headless npm scripts as the primary process.
-
-1. Read [MCP_AGENT_WORKFLOW.md](MCP_AGENT_WORKFLOW.md).
-2. Ensure API `:8000` and Vite `:5173` are running.
-3. **Control procedures** (`01`–`13`) or [coverage-matrix.md](coverage-matrix.md): navigate → snapshot → interact → verify.
-4. **Persona / harder tests** ([PERSONAS.md](PERSONAS.md), [14-persona-journeys.md](14-persona-journeys.md), [15-adversarial-stress.md](15-adversarial-stress.md)): **two-pass** — in-character discovery first, verifier second (see [MCP_AGENT_WORKFLOW.md](MCP_AGENT_WORKFLOW.md)).
-5. Log results in `MCP_SESSION_<date>.md` and/or `MCP_PERSONA_SESSION_<date>.md`.
-
-Agent browser checklist: [docs/UI_REVIEW.md](../../docs/UI_REVIEW.md).
-
-## Optional regression scripts (not a substitute for MCP manual QA)
+1. Start API and frontend (see above).
+2. Run automated guardrails:
 
 ```bash
 cd frontend && npm run ui-smoke && npm run ui-consult-qa
 ```
 
-These only exercise a subset of procedures; agents should still walk the matrix via MCP.
+3. Walk procedures from [coverage-matrix.md](coverage-matrix.md) or the index below — use a browser at ≥901px width unless testing mobile ([12-mobile-responsive.md](12-mobile-responsive.md)).
+4. For release-quality UX, run persona journeys ([PERSONAS.md](PERSONAS.md), [14-persona-journeys.md](14-persona-journeys.md)) and stress cases ([15-adversarial-stress.md](15-adversarial-stress.md)). Record PASS/FAIL per `MT-###` / `UX-###` in your PR or issue.
 
-Baseline screenshots (after layout fix): `docs/screenshots/manual/` — welcome, consult-expanded, negotiation, review_halt, finished.
+Checklist summary: [docs/UI_REVIEW.md](../../docs/UI_REVIEW.md).
 
 ## Procedure index
 
@@ -72,5 +64,5 @@ Each case uses:
 - **Preconditions**
 - **Steps**
 - **Expected result**
-- **Playwright check** — selector or assertion
+- **Playwright check** — selector or assertion (used by `ui-smoke` / `ui-consult-qa` where applicable)
 - **Failure signals**

@@ -55,19 +55,18 @@ If you skip evals, say why (e.g. docs-only).
 
 ---
 
-## 5. UI changes: design → tokens → walk
+## 5. UI changes: tokens → implement → verify
 
-1. Penpot + MCP: [PENPOT_MCP.md](PENPOT_MCP.md)
-2. Tokens: [design/TOKENS.md](design/TOKENS.md)
-3. Implement in `frontend/src/`
-4. Manual QA: [tests/manual/MCP_AGENT_WORKFLOW.md](../tests/manual/MCP_AGENT_WORKFLOW.md)
-5. Optional smoke: `npm run ui-smoke` in `frontend/`
+1. Tokens: [design/TOKENS.md](design/TOKENS.md)
+2. Implement in `frontend/src/`
+3. Smoke: `cd frontend && npm run ui-smoke && npm run ui-consult-qa`
+4. Manual procedures: [tests/manual/README.md](../tests/manual/README.md) and [UI_REVIEW.md](UI_REVIEW.md)
 
 ---
 
 ## 6. Never commit
 
-- `.env`, API keys, Penpot tokens, `.cursor/mcp.json`
+- `.env`, API keys, `.cursor/mcp.json` (local MCP config)
 - `projects/`, `projects.db`, `mcp/*/data.db`
 - `.playwright-mcp/` session YAML
 - `.claude/settings.local.json` (or other `settings.local.json`)

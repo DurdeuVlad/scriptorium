@@ -1,6 +1,6 @@
 # Scriptorium design tokens
 
-Source of truth for the React UI. Aligns with [SCRIPTORIUM_PENPOT_BRIEF.md](./SCRIPTORIUM_PENPOT_BRIEF.md).
+Source of truth for the React UI (`frontend/src/index.css` and shell components).
 
 ## Color
 

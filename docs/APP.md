@@ -104,30 +104,16 @@ See `.env.example` for defaults.
 
 ## UI review
 
-### Playwright MCP (Cursor)
+Checklist: [UI_REVIEW.md](UI_REVIEW.md). Procedure index: [../tests/manual/README.md](../tests/manual/README.md).
 
-See [PENPOT_MCP.md](PENPOT_MCP.md) and [.cursor/mcp.json.example](../.cursor/mcp.json.example). Never commit real MCP tokens.
-
-Checklist: [UI_REVIEW.md](UI_REVIEW.md). Manual agent workflow: [../tests/manual/MCP_AGENT_WORKFLOW.md](../tests/manual/MCP_AGENT_WORKFLOW.md).
-
-### Smoke script
+Optional IDE Playwright MCP: [.cursor/mcp.json.example](../.cursor/mcp.json.example). Never commit local MCP secrets.
 
 ```bash
 cd frontend
 npx playwright install chromium
 npm run ui-smoke
+npm run ui-consult-qa
 # Docker prod: SCRIPTORIUM_BASE_URL=http://localhost:8080 npm run ui-smoke
 ```
 
-Smoke is a guardrail, not a substitute for MCP persona walks.
-
----
-
-## Penpot (optional)
-
-Design iteration before React changes:
-
-1. [PENPOT_MCP.md](PENPOT_MCP.md)
-2. [design/SCRIPTORIUM_PENPOT_BRIEF.md](design/SCRIPTORIUM_PENPOT_BRIEF.md)
-3. Tokens: [design/TOKENS.md](design/TOKENS.md)
-4. Implement in `frontend/src/index.css`
+Design tokens: [design/TOKENS.md](design/TOKENS.md) → `frontend/src/index.css`.

@@ -12,7 +12,7 @@
 
 ## Checklist
 
-- [ ] No secrets (`.env`, API keys, Penpot tokens, `projects/`, `*.db`)
+- [ ] No secrets (`.env`, API keys, `.cursor/mcp.json`, `projects/`, `*.db`)
 - [ ] Framework changes: noted eval run or reason skipped (`evals/cases/case-01`)
 - [ ] Docs updated if behavior or setup changed
 - [ ] `npm run lint` passes in `frontend/` (if UI touched)

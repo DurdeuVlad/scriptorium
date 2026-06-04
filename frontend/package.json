@@ -9,8 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "ui-smoke": "node scripts/ui-smoke.mjs",
-    "ui-consult-qa": "node scripts/ui-consult-qa.mjs",
-    "ui-proposal-qa": "node scripts/ui-proposal-qa.mjs"
+    "ui-consult-qa": "node scripts/ui-consult-qa.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",

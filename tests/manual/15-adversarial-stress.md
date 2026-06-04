@@ -1,7 +1,7 @@
 # Adversarial and stress scenarios (harder)
 
 Procedure prefix: **UX-2xx** / **HARD-###**  
-Persona **P7** (Robin) unless noted. Run via Playwright MCP with intentional misuse.
+Persona **P7** (Robin) unless noted. Run in a browser with intentional misuse; map findings to `MT-###` where applicable.
 
 ---
 
