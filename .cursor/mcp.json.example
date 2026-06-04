@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "penpot": {
+      "url": "https://YOUR_PENPOT_HOST/mcp/stream?userToken=YOUR_MCP_KEY",
+      "type": "http"
+    },
+    "penpot-local": {
+      "url": "http://localhost:4401/mcp",
+      "type": "http"
+    }
+  }
+}
