@@ -31,6 +31,10 @@ class SemanticStore:
     def assert_fact(self, subject: str, predicate: str, object_val: str, provenance: str):
         """Asserts a fact quad in the database."""
         with sqlite3.connect(self.db_path) as conn:
+            # Delete any existing facts for this subject and predicate to avoid duplicate claims
+            conn.execute("""
+                DELETE FROM quads WHERE subject = ? AND predicate = ?
+            """, (subject, predicate))
             conn.execute("""
                 INSERT OR REPLACE INTO quads (subject, predicate, object, provenance, timestamp)
                 VALUES (?, ?, ?, ?, ?)

@@ -15,12 +15,33 @@ from langchain_anthropic import ChatAnthropic
 from semantic_db import SemanticStore
 from compliance_db import ComplianceStore
 from mcp_client import MCPClientManager
+from agency_settings import (
+    default_agency_settings,
+    merge_agency_settings,
+    outline_hint_from_settings,
+    iter_draft_units,
+)
+from style_packs import apply_style_pack, voice_prompt_block
 
 load_dotenv()
 
 # ==========================================
 # 1. State Models
 # ==========================================
+
+class ConversationMessage(BaseModel):
+    role: str = Field(description="'user', 'assistant', or 'system'.")
+    content: str = Field(description="Message body.")
+    ts: str = Field(default="", description="ISO timestamp.")
+    meta: Dict[str, Any] = Field(default_factory=dict, description="Optional metadata (ticket_id, etc.).")
+
+
+class PendingPrompt(BaseModel):
+    ticket_id: Optional[str] = Field(default=None, description="Ticket this question resolves.")
+    field: Optional[str] = Field(default=None, description="Brief/outline field being collected.")
+    question: str = Field(description="Question shown to the user.")
+    choices: List[str] = Field(default_factory=list, description="Quick-reply options.")
+
 
 class EditTicket(BaseModel):
     ticket_id: str = Field(description="Unique ID for this issue.")
@@ -31,6 +52,21 @@ class EditTicket(BaseModel):
     severity: str = Field(description="'blocker' (must resolve) or 'warning' (can skip).")
     suggested_fix: str = Field(description="Explicit instructions on how to resolve the issue.")
     resolved: bool = Field(default=False, description="Tracking flag for resolution loops.")
+
+
+class ProposedAction(BaseModel):
+    proposal_id: str = Field(description="Unique ID for this pending action.")
+    kind: str = Field(description="Action type: update_agency_settings, patch_outline, etc.")
+    summary: str = Field(description="Human-readable one-line summary.")
+    before: Dict[str, Any] = Field(default_factory=dict)
+    after: Dict[str, Any] = Field(default_factory=dict)
+    available_decisions: List[str] = Field(
+        default_factory=lambda: ["confirm", "edit", "cancel"]
+    )
+    apply_payload: Dict[str, Any] = Field(default_factory=dict)
+    status: str = Field(default="pending", description="pending | confirmed | cancelled")
+    created_at: str = Field(default="")
+
 
 class NewsroomState(BaseModel):
     # Run Identifiers
@@ -50,10 +86,14 @@ class NewsroomState(BaseModel):
     brief: Dict[str, Any] = Field(default_factory=dict, description="The validated JSON brief schema.")
     outline: Dict[str, Any] = Field(default_factory=dict, description="The validated JSON outline schema.")
     manuscript: Dict[str, str] = Field(default_factory=dict, description="Chapter/section ID mapped to Markdown text.")
+    agency_settings: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Word/chapter/subsection targets for the writing agency.",
+    )
     
     # Review & Editorial status
     editorial_memo: List[EditTicket] = Field(default_factory=list, description="Aggregated outstanding edit tickets.")
-    active_style_pack: str = Field(default="baseline", description="The persona profile ID loaded from persona-write.")
+    active_style_pack: str = Field(default="", description="Active style pack or custom voice ID.")
     run_phase: str = Field(default="intake", description="Current newsroom phase.")
     
     # Blocker status (System failures / user checkpoints)
@@ -61,6 +101,27 @@ class NewsroomState(BaseModel):
 
     # WebSocket / Communication bridge
     ws_signal: Optional[str] = Field(default=None, description="Inbound WebSocket signal (e.g., 'outline_approved').")
+
+    # Consulting / conversation layer
+    conversation: List[ConversationMessage] = Field(
+        default_factory=list, description="Persisted consult thread."
+    )
+    intake_status: str = Field(
+        default="not_started",
+        description="'not_started' | 'in_progress' | 'complete'.",
+    )
+    pending_prompt: Optional[PendingPrompt] = Field(
+        default=None, description="Structured question awaiting user reply."
+    )
+    consult_mode: str = Field(
+        default="intake", description="Mirrors UI consult mode for the active phase."
+    )
+    active_ticket_id: Optional[str] = Field(
+        default=None, description="Ticket user is answering in chat."
+    )
+    pending_proposal: Optional[ProposedAction] = Field(
+        default=None, description="Action awaiting user confirmation."
+    )
 
 # ==========================================
 # 2. LLM Helper Resolution
@@ -183,33 +244,74 @@ async def write_brief(state: NewsroomState) -> Dict[str, Any]:
                 suggested_fix="Please clarify in chat if /tasks/archive should be documented."
             ))
 
+    existing_brief = dict(state.brief or {})
+    agency = merge_agency_settings(
+        state.agency_settings or default_agency_settings(state.domain),
+        None,
+        state.domain,
+    )
+    pack_id = apply_style_pack(state.active_style_pack, state.domain)
+
     llm = get_planner_llm()  # Brief generation: uses Pro model for structured JSON quality
     if not llm:
-        # Mock brief for local offline validation
         mock_brief = {
-            "title": f"Guide to AI for {state.target_audience}",
-            "goal": "Explain AI simply",
-            "audience": state.target_audience,
-            "tone": "conversational",
+            **existing_brief,
+            "title": existing_brief.get("title") or f"Guide to AI for {state.target_audience}",
+            "goal": existing_brief.get("goal") or "Explain AI simply",
+            "audience": existing_brief.get("audience") or state.target_audience,
+            "tone": existing_brief.get("tone") or "conversational",
             "domain": state.domain,
-            "constraints": []
+            "constraints": existing_brief.get("constraints") or [],
+            "style_pack": pack_id,
         }
-        return {"brief": mock_brief, "run_phase": "planning", "editorial_memo": tickets}
+        return {
+            "brief": mock_brief,
+            "agency_settings": agency,
+            "active_style_pack": pack_id,
+            "run_phase": "planning",
+            "editorial_memo": tickets,
+        }
 
-    system_prompt = "You are the Commissioning Editor. Write a structured JSON brief for this book/document topic. Respond ONLY with raw JSON, no markdown fences."
-    user_prompt = f"Topic: {state.prompt}\nAudience: {state.target_audience}\nDomain: {state.domain}"
-    
+    system_prompt = (
+        "You are the Commissioning Editor. Write a structured JSON brief for this book/document topic. "
+        "Respond ONLY with raw JSON, no markdown fences. "
+        "Preserve audience, tone, and constraints from the existing brief when present."
+    )
+    user_prompt = (
+        f"Topic: {state.prompt}\nAudience: {state.target_audience}\nDomain: {state.domain}\n"
+        f"Existing brief from consultation: {json.dumps(existing_brief)}\n"
+        f"Agency settings: {json.dumps(agency)}\n"
+        f"Style pack: {pack_id}"
+    )
+
     response = await llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)])
     try:
-        # BUG FIX: strip markdown fences that LLMs like Gemini often wrap JSON in
         raw_content = extract_text(response.content)
         raw = raw_content.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
         brief_data = json.loads(raw)
     except Exception as e:
         print(f"[write_brief] JSON parse failed ({e}), using fallback brief.")
-        brief_data = {"title": "Brief Draft", "goal": state.prompt, "audience": state.target_audience, "domain": state.domain}
-        
-    return {"brief": brief_data, "run_phase": "planning", "editorial_memo": tickets}
+        brief_data = {
+            "title": "Brief Draft",
+            "goal": state.prompt,
+            "audience": state.target_audience,
+            "domain": state.domain,
+        }
+
+    brief_data = {**existing_brief, **brief_data}
+    brief_data["style_pack"] = pack_id
+    if existing_brief.get("tone") and not brief_data.get("tone"):
+        brief_data["tone"] = existing_brief["tone"]
+    if existing_brief.get("constraints") and not brief_data.get("constraints"):
+        brief_data["constraints"] = existing_brief["constraints"]
+
+    return {
+        "brief": brief_data,
+        "agency_settings": agency,
+        "active_style_pack": pack_id,
+        "run_phase": "planning",
+        "editorial_memo": tickets,
+    }
 
 
 async def write_outline(state: NewsroomState) -> Dict[str, Any]:
@@ -225,8 +327,27 @@ async def write_outline(state: NewsroomState) -> Dict[str, Any]:
         }
         return {"outline": mock_outline, "run_phase": "negotiation"}
 
-    system_prompt = "You are the Outline Architect. Generate a JSON outline. The JSON must have a top-level 'sections' array where each item has 'id', 'title', and 'goal' keys. Respond ONLY with raw JSON, no markdown fences."
-    user_prompt = f"Brief: {json.dumps(state.brief)}"
+    agency = merge_agency_settings(
+        state.agency_settings or default_agency_settings(state.domain),
+        None,
+        state.domain,
+    )
+    section_hint = outline_hint_from_settings(agency, state.domain)
+    max_depth = int(agency.get("max_subsection_depth") or 1)
+    subsection_note = ""
+    if max_depth > 1:
+        subsection_note = (
+            " Each section may include a 'subsections' array with the same shape "
+            "(id, title, goal, optional subsections). "
+        )
+    system_prompt = (
+        "You are the Outline Architect. Generate a JSON outline. "
+        "The JSON must have a top-level 'sections' array where each item has 'id', 'title', and 'goal' keys."
+        f"{subsection_note}"
+        f"Aim for {section_hint}. "
+        "Respond ONLY with raw JSON, no markdown fences."
+    )
+    user_prompt = f"Brief: {json.dumps(state.brief)}\nAgency settings: {json.dumps(agency)}"
     
     response = await llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)])
     try:
@@ -262,65 +383,116 @@ async def negotiate_outline(state: NewsroomState) -> Dict[str, Any]:
 
 async def staff_writer(state: NewsroomState) -> Dict[str, Any]:
     print("[Node: staff_writer] Drafting/Revising sections...")
-    llm = get_executor_llm()  # Drafting: uses Flash model — called once per section, throughput matters
+    llm = get_executor_llm()
     manuscript = dict(state.manuscript)
-    
-    # Resolve databases
     fact_store = SemanticStore(state.rdf_db_path)
-    
-    # Check if we have active edit tickets to resolve
     tickets = [t for t in state.editorial_memo if not t.resolved]
-    
-    for section in state.outline.get("sections", []):
-        sid = section["id"]
-        title = section["title"]
-        goal = section["goal"]
-        
-        # Check if this section has an outstanding ticket
-        section_tickets = [t for t in tickets if t.section_id == sid]
-        
-        # Load facts from the central RDF fact database for context
+
+    agency = merge_agency_settings(
+        state.agency_settings or default_agency_settings(state.domain),
+        None,
+        state.domain,
+    )
+    max_depth = int(agency.get("max_subsection_depth") or 1)
+    pack_id = apply_style_pack(
+        state.active_style_pack or (state.brief or {}).get("style_pack"),
+        state.domain,
+    )
+    project_id = ""
+    if state.project_path:
+        parts = state.project_path.replace("\\", "/").split("/")
+        try:
+            idx = parts.index("projects")
+            project_id = parts[idx + 1]
+        except (ValueError, IndexError):
+            pass
+    voice_block = voice_prompt_block(project_id, pack_id)
+    words_per = agency.get("words_per_chapter")
+
+    draft_units = iter_draft_units(state.outline, max_depth=max_depth)
+    if not draft_units:
+        draft_units = [
+            {
+                "key": s["id"],
+                "id": s["id"],
+                "title": s.get("title", s["id"]),
+                "goal": s.get("goal", ""),
+                "depth": 1,
+            }
+            for s in state.outline.get("sections", [])
+        ]
+
+    all_keys = {u["key"] for u in draft_units}
+
+    for unit in draft_units:
+        key = unit["key"]
+        sid = unit["id"]
+        title = unit["title"]
+        goal = unit["goal"]
+        depth = unit.get("depth", 1)
+        heading = "#" * min(depth + 1, 4)
+
+        section_tickets = [
+            t for t in tickets
+            if t.section_id == sid or t.section_id == key or t.section_id in (sid, key)
+        ]
+
         facts = fact_store.get_all_quads()
-        facts_context = "\n".join([f"({q['subject']}, {q['predicate']}, {q['object']})" for q in facts if sid in q['subject'] or 'global' in q['subject']])
-        
-        if sid not in manuscript:
-            # First draft
-            print(f"Writing first draft for: {title}")
+        facts_context = "\n".join([
+            f"({q['subject']}, {q['predicate']}, {q['object']})"
+            for q in facts if sid in q["subject"] or key in q["subject"] or "global" in q["subject"]
+        ])
+
+        word_hint = f"\nTarget length: ~{words_per} words." if words_per else ""
+
+        if key not in manuscript:
+            print(f"Writing first draft for: {title} ({key})")
             if not llm:
-                manuscript[sid] = f"# {title}\n\nDraft content for OSPF and AI tools simply explained."
+                manuscript[key] = f"{heading} {title}\n\nDraft content for this section."
             else:
-                sys_prompt = "You are the Staff Writer. Write the prose draft for this section using provided facts. Output raw Markdown."
-                user_prompt = f"Section: {title}\nGoal: {goal}\nFacts context:\n{facts_context}"
+                sys_prompt = (
+                    "You are the Staff Writer. Write the prose draft for this section using provided facts. "
+                    "Output raw Markdown."
+                    f"{voice_block}"
+                )
+                tone = (state.brief or {}).get("tone")
+                tone_line = f"\nTone: {tone}" if tone else ""
+                user_prompt = (
+                    f"Section: {title}\nGoal: {goal}{tone_line}{word_hint}\n"
+                    f"Facts context:\n{facts_context}"
+                )
                 response = await llm.ainvoke([SystemMessage(content=sys_prompt), HumanMessage(content=user_prompt)])
-                manuscript[sid] = extract_text(response.content)
+                manuscript[key] = extract_text(response.content)
         elif section_tickets:
-            # Revision Pass
             print(f"Revising {title} based on edit memo...")
             for ticket in section_tickets:
                 if not llm:
-                    manuscript[sid] += f"\n\n*Revised to resolve: {ticket.description}*"
+                    manuscript[key] += f"\n\n*Revised to resolve: {ticket.description}*"
                 else:
-                    sys_prompt = "You are the Staff Writer. Revise the provided text to resolve the edit ticket feedback."
-                    user_prompt = f"Original Text:\n{manuscript[sid]}\n\nEdit Ticket:\n{ticket.description}\nSuggested Fix: {ticket.suggested_fix}"
+                    sys_prompt = (
+                        "You are the Staff Writer. Revise the provided text to resolve the edit ticket feedback."
+                        f"{voice_block}"
+                    )
+                    user_prompt = (
+                        f"Original Text:\n{manuscript[key]}\n\nEdit Ticket:\n{ticket.description}\n"
+                        f"Suggested Fix: {ticket.suggested_fix}"
+                    )
                     response = await llm.ainvoke([SystemMessage(content=sys_prompt), HumanMessage(content=user_prompt)])
-                    manuscript[sid] = extract_text(response.content)
-                # BUG FIX: Pydantic v2 models are immutable; mutating ticket.resolved is silently dropped.
-                # We need to rebuild the editorial_memo list with resolved flags updated.
-        
-        # Write section to disk so file watcher streams it to UI
+                    manuscript[key] = extract_text(response.content)
+
         try:
             os.makedirs(state.project_path, exist_ok=True)
-            filepath = os.path.join(state.project_path, f"{sid}.md")
+            safe_key = key.replace("/", "_")
+            filepath = os.path.join(state.project_path, f"{safe_key}.md")
             with open(filepath, "w", encoding="utf-8") as f:
-                f.write(manuscript[sid])
+                f.write(manuscript[key])
             print(f"[staff_writer] Wrote draft file: {filepath}")
         except Exception as e:
             print(f"[staff_writer] Failed to write draft file: {e}")
 
-    # Rebuild editorial_memo with resolved tickets updated
     updated_memo = []
     for t in state.editorial_memo:
-        if t.section_id in [s["id"] for s in state.outline.get("sections", [])] and not t.resolved:
+        if t.section_id in all_keys and not t.resolved:
             updated_memo.append(t.model_copy(update={"resolved": True}))
         else:
             updated_memo.append(t)
@@ -359,11 +531,12 @@ async def pattern_scrubber(state: NewsroomState) -> Dict[str, Any]:
 
 async def copyeditor(state: NewsroomState) -> Dict[str, Any]:
     print("[Node: copyeditor] Analyzing voice and format alignment...")
-    llm = get_executor_llm()  # Copyediting: uses Flash model — style heuristic checks
     tickets = list(state.editorial_memo)
-    
-    # We load persona-write specs (e.g. from local file if needed)
-    # Check style and add tickets
+    pack_id = apply_style_pack(
+        state.active_style_pack or (state.brief or {}).get("style_pack"),
+        state.domain,
+    )
+    print(f"[copyeditor] Active style pack: {pack_id}")
     for sid, text in state.manuscript.items():
         if "uses_mcp" in text.lower() and not any(t.section_id == sid and t.issue_type == "style" for t in tickets):
             # Example style warning
@@ -506,10 +679,58 @@ async def compliance_officer(state: NewsroomState) -> Dict[str, Any]:
     return {"editorial_memo": tickets}
 
 
+def _compile_final_manuscript(manuscript: Dict[str, str], project_path: str = "") -> Dict[str, str]:
+    """Merge chapter drafts into final_manuscript for preview and export."""
+    keys = sorted(k for k in manuscript if k != "final_manuscript")
+    if not keys:
+        return manuscript
+    top_level = [k for k in keys if "__" not in k]
+    if top_level:
+        parts = []
+        for tk in top_level:
+            parts.append(manuscript[tk])
+            for sk in keys:
+                if sk.startswith(f"{tk}__"):
+                    parts.append(manuscript[sk])
+        merged = "\n\n---\n\n".join(parts)
+    else:
+        merged = "\n\n---\n\n".join(manuscript[k] for k in keys)
+    manuscript = {**manuscript, "final_manuscript": merged}
+    if project_path:
+        try:
+            os.makedirs(project_path, exist_ok=True)
+            final_path = os.path.join(project_path, "final_manuscript.md")
+            with open(final_path, "w", encoding="utf-8") as f:
+                f.write(merged)
+            print(f"[compile] Wrote {final_path}")
+        except OSError as e:
+            print(f"[compile] Failed to write final_manuscript: {e}")
+    return manuscript
+
+
 async def creative_review(state: NewsroomState) -> Dict[str, Any]:
     print("[Node: creative_review] Checking narrative pacing and emotional resonance...")
     tickets = list(state.editorial_memo)
     return {"editorial_memo": tickets}
+
+
+def reconcile_run_phase(state: NewsroomState) -> str:
+    """
+    Align persisted run_phase with editorial_memo reality.
+    Stakeholder rule: review_halt only when unresolved blocker tickets exist;
+    publishing maps to finished for the UI.
+    """
+    phase = state.run_phase or "idle"
+    if phase == "publishing":
+        return "finished"
+    if phase == "review_halt":
+        open_blockers = [
+            t for t in state.editorial_memo
+            if not t.resolved and t.severity == "blocker"
+        ]
+        if not open_blockers:
+            return "finished" if state.manuscript else "drafting"
+    return phase
 
 
 async def managing_editor(state: NewsroomState) -> Dict[str, Any]:
@@ -522,7 +743,8 @@ async def managing_editor(state: NewsroomState) -> Dict[str, Any]:
         return {"run_phase": "review_halt", "ws_signal": None}
     else:
         print("Quality gate passed. Editorial compilation signed off.")
-        return {"run_phase": "publishing"}
+        manuscript = _compile_final_manuscript(dict(state.manuscript), state.project_path)
+        return {"run_phase": "finished", "manuscript": manuscript}
 
 # ==========================================
 # 4. LangGraph Engine Construction

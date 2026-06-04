@@ -10,5 +10,6 @@ tiktoken
 langchain-anthropic
 langchain-openai
 langchain-community
+langchain-google-genai
 requests
 aiohttp

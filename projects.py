@@ -20,6 +20,12 @@ import sqlite3
 import uuid
 from datetime import datetime
 
+from agency_settings import (
+    default_agency_settings,
+    merge_agency_settings,
+    validate_outline_against_settings,
+)
+
 PROJECTS_DB = "projects.db"
 PROJECTS_DIR = "projects"
 
@@ -131,6 +137,72 @@ def save_project_state(project_id: str, state_dict: dict, phase: str):
         conn.commit()
 
 
+def merge_plan_in_state(
+    state: dict,
+    brief: dict | None = None,
+    outline: dict | None = None,
+    agency_settings: dict | None = None,
+) -> dict:
+    """Deep-merge brief/outline/agency_settings patches into a state dict."""
+    domain = (state.get("brief") or {}).get("domain") or state.get("domain") or "technical-docs"
+    if agency_settings is not None:
+        state["agency_settings"] = merge_agency_settings(
+            state.get("agency_settings"),
+            agency_settings,
+            domain,
+        )
+    if brief is not None:
+        existing = state.get("brief") or {}
+        if isinstance(existing, dict) and isinstance(brief, dict):
+            merged = {**existing, **brief}
+            if "constraints" in brief and isinstance(brief.get("constraints"), list):
+                merged["constraints"] = brief["constraints"]
+            state["brief"] = merged
+        else:
+            state["brief"] = brief
+    if outline is not None:
+        existing = state.get("outline") or {}
+        if isinstance(existing, dict) and isinstance(outline, dict):
+            if outline.get("sections") is not None:
+                state["outline"] = {**existing, **outline}
+            else:
+                state["outline"] = {**existing, **outline}
+        else:
+            state["outline"] = outline
+    return state
+
+
+def update_project_plan(
+    project_id: str,
+    brief: dict | None,
+    outline: dict | None,
+    agency_settings: dict | None = None,
+) -> dict:
+    """Merge brief/outline/agency_settings into the stored state snapshot."""
+    project = _require_project(project_id)
+    phase = project.get("phase") or "idle"
+    if phase not in ("negotiation", "planning", "idle", "intake", "review_halt"):
+        raise ValueError(f"Plan cannot be edited in phase: {phase}")
+
+    state = project.get("state") or {}
+    if not state.get("agency_settings"):
+        state["agency_settings"] = default_agency_settings(project.get("domain", "technical-docs"))
+    merge_plan_in_state(state, brief, outline, agency_settings)
+
+    settings = state.get("agency_settings") or {}
+    outline_data = state.get("outline")
+    ok, err = validate_outline_against_settings(outline_data, settings)
+    if not ok and outline_data and outline_data.get("sections"):
+        raise ValueError(err)
+
+    save_project_state(project_id, state, phase)
+    return {
+        "brief": state.get("brief"),
+        "outline": state.get("outline"),
+        "agency_settings": state.get("agency_settings"),
+    }
+
+
 def delete_project(project_id: str):
     """Remove the project from the DB and delete its directory tree."""
     init_db()
@@ -151,4 +223,80 @@ def get_project_paths(project_id: str) -> dict:
         "project_path":        os.path.join(base, "artifacts"),
         "rdf_db_path":         os.path.join(base, "db", "semantic.db"),
         "compliance_db_path":  os.path.join(base, "db", "compliance.db"),
+    }
+
+
+def _require_project(project_id: str) -> dict:
+    project = get_project(project_id)
+    if not project:
+        raise FileNotFoundError(f"Project not found: {project_id}")
+    return project
+
+
+def _artifact_file_path(project_id: str, artifact_id: str) -> str:
+    """Resolve artifact_id to a markdown file path."""
+    safe_id = artifact_id.replace(".md", "").strip().replace("/", "").replace("\\", "")
+    if not safe_id:
+        raise ValueError("Invalid artifact id")
+    if safe_id == "final_manuscript":
+        return os.path.join(PROJECTS_DIR, project_id, "final_manuscript.md")
+    return os.path.join(get_project_paths(project_id)["project_path"], f"{safe_id}.md")
+
+
+def list_artifacts(project_id: str) -> list:
+    """List markdown artifacts for a project."""
+    _require_project(project_id)
+    artifacts_dir = get_project_paths(project_id)["project_path"]
+    os.makedirs(artifacts_dir, exist_ok=True)
+    items = []
+    seen_ids = set()
+    for name in sorted(os.listdir(artifacts_dir)):
+        if not name.endswith(".md"):
+            continue
+        artifact_id = name[:-3]
+        if artifact_id in seen_ids:
+            continue
+        path = os.path.join(artifacts_dir, name)
+        mtime = os.path.getmtime(path)
+        kind = "export" if artifact_id == "final_manuscript" else "chapter"
+        items.append({
+            "id": artifact_id,
+            "filename": name,
+            "kind": kind,
+            "updated_at": datetime.utcfromtimestamp(mtime).isoformat() + "Z",
+        })
+        seen_ids.add(artifact_id)
+
+    final_path = os.path.join(PROJECTS_DIR, project_id, "final_manuscript.md")
+    if os.path.isfile(final_path) and "final_manuscript" not in seen_ids:
+        mtime = os.path.getmtime(final_path)
+        items.append({
+            "id": "final_manuscript",
+            "filename": "final_manuscript.md",
+            "kind": "export",
+            "updated_at": datetime.utcfromtimestamp(mtime).isoformat() + "Z",
+        })
+
+    return items
+
+
+def read_artifact(project_id: str, artifact_id: str) -> str:
+    path = _artifact_file_path(project_id, artifact_id)
+    if not os.path.isfile(path):
+        raise FileNotFoundError(f"Artifact not found: {artifact_id}")
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
+
+
+def write_artifact(project_id: str, artifact_id: str, content: str) -> dict:
+    _require_project(project_id)
+    path = _artifact_file_path(project_id, artifact_id)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content)
+    mtime = os.path.getmtime(path)
+    return {
+        "id": artifact_id.replace(".md", ""),
+        "filename": os.path.basename(path),
+        "updated_at": datetime.utcfromtimestamp(mtime).isoformat() + "Z",
     }

@@ -23,6 +23,7 @@ class MCPClientManager:
         read, write = await client.__aenter__()
         
         session = ClientSession(read, write)
+        await session.__aenter__()
         await session.initialize()
         
         self.clients[name] = client
@@ -41,11 +42,18 @@ class MCPClientManager:
 
     async def disconnect_all(self):
         """Disconnects all active sessions and terminates server processes."""
-        for name, client in self.clients.items():
-            print(f"Disconnecting {name} MCP server...")
+        for name, session in list(self.sessions.items()):
+            print(f"Disconnecting session for {name} MCP server...")
+            try:
+                await session.__aexit__(None, None, None)
+            except Exception as e:
+                print(f"Error disconnecting session {name}: {e}")
+                
+        for name, client in list(self.clients.items()):
+            print(f"Disconnecting client for {name} MCP server...")
             try:
                 await client.__aexit__(None, None, None)
             except Exception as e:
-                print(f"Error disconnecting {name}: {e}")
+                print(f"Error disconnecting client {name}: {e}")
         self.sessions.clear()
         self.clients.clear()
