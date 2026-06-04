@@ -7,13 +7,17 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "ui-smoke": "node scripts/ui-smoke.mjs",
+    "ui-consult-qa": "node scripts/ui-consult-qa.mjs",
+    "ui-proposal-qa": "node scripts/ui-proposal-qa.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },
   "devDependencies": {
+    "playwright": "^1.52.0",
     "@eslint/js": "^10.0.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
