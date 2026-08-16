@@ -1012,6 +1012,8 @@ async def export_document(payload: ExportPayload):
     print(f"[Export] format={format_type} project={payload.project_id}")
 
     if payload.project_id:
+        if not proj_store.get_project(payload.project_id):
+            raise HTTPException(status_code=404, detail="Project not found")
         artifacts_dir = proj_store.get_project_paths(payload.project_id)["project_path"]
         final_md_path = os.path.abspath(
             os.path.join("projects", payload.project_id, "final_manuscript.md")
