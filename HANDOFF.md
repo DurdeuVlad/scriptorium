@@ -2,9 +2,13 @@
 
 **Purpose:** Enable a new agent, with no prior conversation context, to understand this repository, what has been built, how it was built, and how to continue.
 
-**Last updated:** 2026-03-29
-**Phases complete:** 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-**Next phase:** 11 (Core Writing Pipeline)
+**Last updated:** 2026-03-31
+**Phases complete:** 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 — Phases 11 (Core Writing
+Pipeline) and 12 (QA & Review System) are implemented, verification pending
+(see `ROADMAP.md` and `PRODUCTION_READINESS_PLAN.md` for current status)
+**Next phase:** none pending implementation — remaining work is verifying
+Phases 11-12 end-to-end against `evals/cases/case-01-technical-docs.md` and
+`case-02-portability.md`
 
 **Quick help:** Run `/help` for framework overview and status, or read `QUICK_START.md`
 
