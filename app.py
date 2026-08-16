@@ -30,6 +30,7 @@ from rate_limit import (
     MAX_CONCURRENT_WS_CONNECTIONS,
     client_key,
 )
+from auth import ApiTokenAuthMiddleware
 
 app = FastAPI()
 
@@ -40,6 +41,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(ApiTokenAuthMiddleware)
 
 # ── WebSocket connection manager ───────────────────────────────────────────────
 
