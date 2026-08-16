@@ -914,6 +914,9 @@ async def websocket_endpoint(websocket: WebSocket):
                         domain=message.get("domain", "technical-docs"),
                     )
                     project_id = p["id"]
+                elif not proj_store.get_project(project_id):
+                    await websocket.send_json({"type": "error", "message": "Project not found"})
+                    continue
 
                 current_project_id = project_id
                 hydrated = _hydrate_state_from_project(project_id)
