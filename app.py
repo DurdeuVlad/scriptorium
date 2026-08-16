@@ -461,7 +461,14 @@ def _resolve_ws_project_state(
     hydrated = _hydrate_state_from_project(pid)
     if hydrated:
         return pid, hydrated
-    return pid, state
+    # pid doesn't hydrate to a real project (e.g. a client-supplied
+    # project_id that doesn't exist). Don't trust it as the new
+    # current_project_id -- that would poison the session's tracked
+    # project to an unvalidated value while still carrying the old
+    # (real) state, causing subsequent _persist_state() calls to
+    # silently no-op against a non-existent row. Fall back to whatever
+    # was already validated for this connection instead.
+    return current_project_id, state
 
 
 async def _run_pipeline_start(websocket: WebSocket, graph, state: NewsroomState, project_id: str):
