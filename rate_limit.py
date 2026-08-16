@@ -67,9 +67,19 @@ MAX_CONCURRENT_WS_CONNECTIONS = _int_env("MAX_CONCURRENT_WS_CONNECTIONS", 50)
 
 def client_key(conn) -> str:
     """conn is a FastAPI/Starlette Request or WebSocket -- both expose
-    .headers and .client the same way."""
+    .headers and .client the same way.
+
+    Prefers X-Real-IP over X-Forwarded-For deliberately: nginx.conf sets
+    X-Real-IP from $remote_addr, which *overwrites* any client-supplied
+    value, so it's trustworthy when this app sits behind that proxy.
+    X-Forwarded-For is set via $proxy_add_x_forwarded_for, which
+    *appends* to whatever the client already sent -- a client can still
+    prepend an arbitrary first value, so it's not safe to prefer."""
     headers = conn.headers
-    forwarded = headers.get("x-forwarded-for") or headers.get("x-real-ip")
+    real_ip = headers.get("x-real-ip")
+    if real_ip:
+        return real_ip.strip()
+    forwarded = headers.get("x-forwarded-for")
     if forwarded:
         return forwarded.split(",")[0].strip()
     client = getattr(conn, "client", None)
