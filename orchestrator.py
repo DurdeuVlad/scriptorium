@@ -516,10 +516,15 @@ async def pattern_scrubber(state: NewsroomState) -> Dict[str, Any]:
         else:
             manuscript[sid] = cleaned
             
-        # Write cleaned section back to disk
+        # Write cleaned section back to disk. Sanitize sid the same way
+        # staff_writer sanitizes this exact identifier (safe_key), so this
+        # write lands on the same file staff_writer already wrote instead
+        # of drifting to a different (and unsanitized, traversal-prone)
+        # path for the same section.
         try:
             os.makedirs(state.project_path, exist_ok=True)
-            filepath = os.path.join(state.project_path, f"{sid}.md")
+            safe_sid = sid.replace("/", "_")
+            filepath = os.path.join(state.project_path, f"{safe_sid}.md")
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(manuscript[sid])
             print(f"[pattern_scrubber] Wrote clean draft file: {filepath}")

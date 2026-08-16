@@ -29,7 +29,8 @@ BUILTIN_PACK_IDS = [
 
 
 def _pack_path(pack_id: str) -> str:
-    return os.path.join(STYLES_DIR, f"{pack_id}.md")
+    safe_id = str(pack_id).strip().replace("/", "").replace("\\", "")
+    return os.path.join(STYLES_DIR, f"{safe_id}.md")
 
 
 def list_builtin_style_packs() -> List[Dict[str, Any]]:
