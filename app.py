@@ -150,6 +150,8 @@ class PlanUpdatePayload(BaseModel):
 @app.get("/style-packs")
 async def get_style_packs(project_id: str | None = None):
     """List built-in and optional per-project custom writing voices."""
+    if project_id and not proj_store.get_project(project_id):
+        raise HTTPException(status_code=404, detail="Project not found")
     return {"voices": list_all_voices(project_id)}
 
 
