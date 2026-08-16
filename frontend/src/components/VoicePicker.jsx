@@ -29,7 +29,9 @@ export default function VoicePicker({
   }, [projectId]);
 
   useEffect(() => {
-    load();
+    (async () => {
+      await load();
+    })();
   }, [load]);
 
   const handleCreate = async () => {
