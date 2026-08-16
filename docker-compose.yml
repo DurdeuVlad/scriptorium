@@ -1,12 +1,11 @@
 # SECURITY NOTE: the "prod" profile below builds production-style
 # containers (nginx serving the built frontend, no dev tooling) — it does
-# NOT mean "safe to expose beyond your own machine." There is no
-# authentication anywhere in the API (see README.md's maturity table:
-# "App UI + local run: Runnable; no auth" / "Hosted production: Not
-# ready"), and nginx.conf is a bare reverse proxy with no auth layer of
-# its own. If you run the "prod" profile anywhere reachable beyond
-# localhost, put your own auth in front of it (reverse-proxy basic auth,
-# VPN, Tailscale, etc.) first.
+# NOT mean "safe to expose beyond your own machine" by default. The API
+# has no authentication unless you set API_AUTH_TOKEN (see .env.example),
+# and nginx.conf is a bare reverse proxy with no auth layer of its own.
+# If you run the "prod" profile anywhere reachable beyond localhost,
+# either set API_AUTH_TOKEN or put your own auth in front of it
+# (reverse-proxy basic auth, VPN, Tailscale, etc.) first.
 services:
   api:
     build:

@@ -24,6 +24,7 @@ from style_packs import (
 from intent_router import route_user_intent, _heuristic_action_proposal
 from action_executor import confirm_proposal, cancel_proposal, ApplyResult
 from orchestrator import ProposedAction
+from auth import ApiTokenAuthMiddleware
 
 app = FastAPI()
 
@@ -34,6 +35,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(ApiTokenAuthMiddleware)
 
 # ── WebSocket connection manager ───────────────────────────────────────────────
 
