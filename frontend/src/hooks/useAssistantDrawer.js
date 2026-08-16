@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 const AUTO_EXPAND_PHASES = new Set(["intake", "negotiation", "review_halt"]);
 
@@ -9,11 +9,22 @@ export function useAssistantDrawer({ phase, openTicketCount, hasError }) {
   const shouldAutoExpand =
     AUTO_EXPAND_PHASES.has(phase) || openTicketCount > 0 || hasError;
 
-  useEffect(() => {
+  // Adjust `expanded` when shouldAutoExpand/pinned change, without a
+  // useEffect round-trip -- this is React's documented pattern for
+  // "adjusting state when a prop changes" during render:
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  // Seed with `null` (never a real key, which is always "<bool>:<bool>") so
+  // the check below always runs on mount too -- matching the original
+  // useEffect, which always fires once after the initial render regardless
+  // of the starting values.
+  const autoExpandKey = `${shouldAutoExpand}:${pinned}`;
+  const [prevAutoExpandKey, setPrevAutoExpandKey] = useState(null);
+  if (autoExpandKey !== prevAutoExpandKey) {
+    setPrevAutoExpandKey(autoExpandKey);
     if (shouldAutoExpand && !pinned) {
       setExpanded(true);
     }
-  }, [shouldAutoExpand, pinned]);
+  }
 
   const toggle = useCallback(() => {
     setExpanded((v) => !v);
