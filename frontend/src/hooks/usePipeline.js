@@ -73,6 +73,7 @@ function withProjectId(payload, projectId) {
 
 export function usePipeline({
   activeProjectIdRef,
+  activeProjectId,
   onOutlineProposal,
   onPlanPatch,
   onFileUpdate,
@@ -493,7 +494,15 @@ export function usePipeline({
     setStatusMessage(message || getPhaseMeta(nextPhase).label);
   }, []);
 
-  const chatBlocked = bindPending || !activeProjectIdRef.current;
+  // Use the reactive activeProjectId (not activeProjectIdRef) here: this
+  // value is read during render, and reading a ref's .current during
+  // render doesn't establish a proper reactive dependency -- if it changed
+  // without some other state/prop also changing, consumers of chatBlocked
+  // could show a stale value for a render or two. activeProjectIdRef stays
+  // in use elsewhere in this file (inside stable callbacks/WS handlers,
+  // where a ref is the right tool to avoid stale closures without
+  // resubscribing).
+  const chatBlocked = bindPending || !activeProjectId;
 
   return {
     phase,

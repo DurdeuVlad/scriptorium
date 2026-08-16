@@ -153,6 +153,7 @@ function App() {
 
   const pipeline = usePipeline({
     activeProjectIdRef,
+    activeProjectId: project.activeProjectId,
     onOutlineProposal,
     onPlanPatch,
     onFileUpdate,
