@@ -414,12 +414,11 @@ Add to `.claude/config.json`:
 
 **Step 4: Verify Installation**
 ```bash
-# Test guide-server
-node mcp/guide-server/src/test.js
-
 # Test cache-server
 node mcp/cache-server/src/test.js
 ```
+(`guide-server` and `artifact-server` don't currently ship an equivalent
+`test.js` smoke test — this step only covers what exists today.)
 
 **Step 5: Start Writing**
 ```bash
