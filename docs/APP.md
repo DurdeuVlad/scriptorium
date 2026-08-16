@@ -97,8 +97,26 @@ The server broadcasts artifact and state updates to connected clients.
 | `ARTIFACTS_DIR` | Override artifacts root |
 | `VITE_API_BASE` | Frontend API prefix (default `/api`) |
 | `VITE_WS_URL` | WebSocket URL (optional) |
+| `API_AUTH_TOKEN` | Optional bearer token gating the whole API + WebSocket (unset by default — see Security below) |
+| `RATE_LIMIT_PROJECT_CREATE_PER_HOUR` / `RATE_LIMIT_PIPELINE_RUNS_PER_HOUR` / `MAX_CONCURRENT_WS_CONNECTIONS` | Rate limits, on by default (set to `0` to disable a given one) |
 
 See `.env.example` for defaults.
+
+---
+
+## Security
+
+Local development runs with **no authentication** by default — anyone who
+can reach the port can use the API. Set `API_AUTH_TOKEN` (generate one
+with `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`)
+before running the `docker-compose` `prod` profile anywhere reachable
+beyond your own machine; every HTTP and WebSocket request then needs
+`Authorization: Bearer <token>` except `GET /health`. Project creation,
+pipeline runs, and concurrent WebSocket connections are rate-limited
+in-memory regardless of whether auth is configured — see the env vars
+above to tune or disable. Both are new, minimal, self-hosted-single-
+process protections, not a substitute for your own review before
+exposing this beyond localhost.
 
 ---
 

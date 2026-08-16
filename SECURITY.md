@@ -27,12 +27,12 @@ We will coordinate disclosure and credit if you wish.
 
 ## Out of scope (for now)
 
-- Missing authentication on local dev installs (known alpha limitation)
+- Missing authentication on local dev installs with `API_AUTH_TOKEN` unset (documented default — see `docs/APP.md#security`)
 - Social engineering or issues in third-party LLM providers
 - Findings that require physical access to the developer machine
 
 ## Safe defaults for self-hosting
 
 - Keep `.env` and `.cursor/mcp.json` out of git (see `.gitignore`)
-- Do not expose the API to the public internet without adding your own auth layer
+- Set `API_AUTH_TOKEN` before exposing the API beyond localhost, or put your own auth layer in front of it — see `docs/APP.md#security` and `.env.example`
 - Rotate API keys if they appear in logs or issue attachments

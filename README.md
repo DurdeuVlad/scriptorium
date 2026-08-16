@@ -137,10 +137,10 @@ Full walkthrough: [QUICK_START.md](QUICK_START.md)
 
 | Layer | Maturity |
 |-------|----------|
-| App UI + local run | Runnable; no auth |
+| App UI + local run | Runnable; no auth by default, opt in with `API_AUTH_TOKEN` (see `.env.example`) |
 | LangGraph pipeline | Core agents wired; guide-server not yet in live prompts |
 | Framework specs | Broad command/agent coverage; end-to-end eval proof pending |
-| Hosted production | Not ready |
+| Hosted production | Not ready — pipeline eval proof still pending (see `PRODUCTION_READINESS_PLAN.md`); auth + rate limiting are available if you do deploy the "prod" `docker-compose` profile, but treat this as beta-grade hardening, not a substitute for your own review |
 
 **Validation:** Framework path targets [case-01](evals/cases/case-01-technical-docs.md); publish baseline scores in [evals/BASELINE_COMPARISON.md](evals/BASELINE_COMPARISON.md) when available.
 
@@ -150,9 +150,10 @@ Full walkthrough: [QUICK_START.md](QUICK_START.md)
 
 - [x] Multi-project app, Plan/Draft/Preview, Docker, Playwright smoke
 - [x] Framework phases 1–12 implemented (verification in progress)
+- [x] Optional API token auth + rate limiting (`API_AUTH_TOKEN`, see `docs/APP.md#security`)
 - [ ] Wire guide-server into LangGraph prompts
 - [ ] Multi-session “continue chapter N”
-- [ ] Auth and hosted deployment
+- [ ] Hosted production readiness (pipeline eval proof, see `PRODUCTION_READINESS_PLAN.md`)
 
 Details: [ROADMAP.md](ROADMAP.md)
 
@@ -166,6 +167,6 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md), [docs/GUIDELINES.md](docs/GUIDELINES.md
 
 ## License
 
-[MIT](LICENSE) — Copyright (c) 2026 Scriptorium
+[MIT](LICENSE) — Copyright (c) 2026 DurdeuVlad
 
 *Scriptorium — where every word earns its place.*
