@@ -13,7 +13,6 @@ export default function Workspace({
   prompt,
   audience,
   domain,
-  manuscript,
   selectedFile,
   editorContent,
   saveStatus,
@@ -31,7 +30,7 @@ export default function Workspace({
     return null;
   }
 
-  let body = null;
+  let body;
 
   if (selectedNav === "plan") {
     body = (
