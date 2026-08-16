@@ -4,7 +4,7 @@ import asyncio
 import uuid
 import os
 from datetime import datetime
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from watchdog.observers import Observer
@@ -24,6 +24,12 @@ from style_packs import (
 from intent_router import route_user_intent, _heuristic_action_proposal
 from action_executor import confirm_proposal, cancel_proposal, ApplyResult
 from orchestrator import ProposedAction
+from rate_limit import (
+    PROJECT_CREATE_LIMITER,
+    PIPELINE_RUN_LIMITER,
+    MAX_CONCURRENT_WS_CONNECTIONS,
+    client_key,
+)
 
 app = FastAPI()
 
@@ -133,8 +139,10 @@ class CreateProjectPayload(BaseModel):
 
 
 @app.post("/projects")
-async def create_new_project(payload: CreateProjectPayload):
+async def create_new_project(payload: CreateProjectPayload, request: Request):
     """Create a project record + isolated directory tree."""
+    if not PROJECT_CREATE_LIMITER.allow(client_key(request)):
+        raise HTTPException(status_code=429, detail="Too many projects created recently, try again later.")
     return proj_store.create_project(
         payload.prompt, payload.audience, payload.domain, name=payload.name
     )
@@ -807,6 +815,11 @@ async def _handle_consult(
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    if len(manager.active_connections) >= MAX_CONCURRENT_WS_CONNECTIONS:
+        # Reject before accept() -- 1013 is the standard WS close code for
+        # "server overloaded, try again later".
+        await websocket.close(code=1013)
+        return
     await manager.connect(websocket)
 
     graph = getattr(app.state, "graph", None) or build_graph()
@@ -833,6 +846,9 @@ async def websocket_endpoint(websocket: WebSocket):
             # ── start_consult ────────────────────────────────────────────────
             if message.get("type") == "start_consult":
                 print("[WS] start_consult received")
+                if not PIPELINE_RUN_LIMITER.allow(client_key(websocket)):
+                    await websocket.send_json({"type": "error", "message": "Rate limit exceeded, try again later."})
+                    continue
                 project_id = message.get("project_id")
                 if not project_id:
                     continue
@@ -918,6 +934,9 @@ async def websocket_endpoint(websocket: WebSocket):
             # ── start_run ────────────────────────────────────────────────────
             if message.get("type") == "start_run":
                 print("[WS] start_run received")
+                if not PIPELINE_RUN_LIMITER.allow(client_key(websocket)):
+                    await websocket.send_json({"type": "error", "message": "Rate limit exceeded, try again later."})
+                    continue
 
                 project_id = message.get("project_id")
                 if not project_id:
