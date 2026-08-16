@@ -5,6 +5,7 @@ Intent router — classifies user messages and builds confirmable action proposa
 from __future__ import annotations
 
 import json
+import logging
 import re
 import uuid
 from datetime import datetime, timezone
@@ -20,6 +21,8 @@ from agency_settings import (
 from orchestrator import NewsroomState, ProposedAction, extract_text, get_executor_llm
 from style_packs import default_style_pack_for_domain, list_all_voices
 from langchain_core.messages import HumanMessage, SystemMessage
+
+logger = logging.getLogger(__name__)
 
 VOICE_ALIASES = {
     "technical documentation": "technical-doc",
@@ -261,6 +264,7 @@ async def _llm_route(
         raw = extract_text(resp.content).strip().lstrip("```json").lstrip("```").rstrip("```").strip()
         data = json.loads(raw)
     except Exception:
+        logger.warning("intent classification failed, defaulting to consult", exc_info=True)
         return IntentRouteResult(intent="consult", confidence=0.5, delegate="consult")
 
     intent = data.get("intent") or "consult"
