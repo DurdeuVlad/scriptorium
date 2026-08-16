@@ -10,7 +10,7 @@ anything -- this matters more than usual here, since API_AUTH_TOKEN
 (auth.py) is opt-in, so rate limiting is often the *only* protection
 against a runaway or abusive client.
 
-Keyed by client identity: prefers X-Forwarded-For / X-Real-IP (set by
+Keyed by client identity: prefers X-Real-IP / X-Forwarded-For (set by
 the nginx reverse proxy in docker-compose.yml's "prod" profile) and
 falls back to the direct connection's peer address. Trusting forwarded
 headers is only meaningful when the app truly sits behind that proxy;
