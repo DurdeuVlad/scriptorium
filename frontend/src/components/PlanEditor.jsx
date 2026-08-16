@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { isEditablePlanPhase, isWaitingForOutline, parseSaveStatus } from "../lib/phases.js";
 import { emptySection, flattenSections } from "../lib/outlineTree.js";
@@ -115,7 +115,21 @@ export default function PlanEditor({
   const [saveStatus, setSaveStatus] = useState("");
   const saveTimerRef = useRef(null);
 
-  useEffect(() => {
+  // Adjust localBrief/sections when brief/outline/prompt/audience/domain
+  // change, without a useEffect round-trip -- React's documented
+  // "adjusting state when a prop changes" pattern:
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  // Compare each dependency the same way React's own effect dependency
+  // array does (Object.is per element), and seed with null so the
+  // recompute still runs on mount too, matching the original effect's
+  // always-runs-once-after-mount behavior.
+  const planDeps = [brief, outline, prompt, audience, domain];
+  const [prevPlanDeps, setPrevPlanDeps] = useState(null);
+  const planDepsChanged =
+    prevPlanDeps === null ||
+    planDeps.some((v, i) => !Object.is(v, prevPlanDeps[i]));
+  if (planDepsChanged) {
+    setPrevPlanDeps(planDeps);
     setLocalBrief({
       title: asBriefText(brief?.title, ""),
       goal: asBriefText(brief?.goal, prompt || ""),
@@ -127,7 +141,7 @@ export default function PlanEditor({
         : [],
     });
     setSections(outline?.sections?.length ? outline.sections.map((s) => ({ ...s, subsections: s.subsections || [] })) : []);
-  }, [brief, outline, prompt, audience, domain]);
+  }
 
   const scheduleSave = useCallback(
     (nextBrief, nextSections, nextAgency, nextVoice) => {
