@@ -823,10 +823,11 @@ async def websocket_endpoint(websocket: WebSocket):
                 project_id = message.get("project_id")
                 if not project_id:
                     continue
-                current_project_id = project_id
-                state = _hydrate_state_from_project(project_id)
-                if state:
-                    await websocket.send_json(_conversation_sync_payload(project_id, state))
+                hydrated = _hydrate_state_from_project(project_id)
+                if hydrated:
+                    current_project_id = project_id
+                    state = hydrated
+                    await websocket.send_json(_conversation_sync_payload(project_id, hydrated))
                 continue
 
             # ── start_consult ────────────────────────────────────────────────
@@ -835,15 +836,18 @@ async def websocket_endpoint(websocket: WebSocket):
                 project_id = message.get("project_id")
                 if not project_id:
                     continue
-                current_project_id = project_id
-                state = _hydrate_state_from_project(project_id)
-                if not state:
+                # Resolve into a local var first -- don't touch the
+                # session's current_project_id/state until we know
+                # project_id is real, so an invalid id can't clobber
+                # whatever was already validated for this connection.
+                hydrated = _hydrate_state_from_project(project_id)
+                if not hydrated:
                     p = proj_store.get_project(project_id)
                     if not p:
                         await websocket.send_json({"type": "error", "message": "Project not found"})
                         continue
                     paths = proj_store.get_project_paths(project_id)
-                    state = NewsroomState(
+                    hydrated = NewsroomState(
                         run_id=str(uuid.uuid4()),
                         project_path=paths["project_path"],
                         prompt=message.get("prompt") or p.get("prompt", ""),
@@ -862,11 +866,14 @@ async def websocket_endpoint(websocket: WebSocket):
                     )
                 else:
                     if message.get("prompt"):
-                        state.prompt = message.get("prompt")
+                        hydrated.prompt = message.get("prompt")
                     if message.get("target_audience"):
-                        state.target_audience = message.get("target_audience")
+                        hydrated.target_audience = message.get("target_audience")
                     if message.get("domain"):
-                        state.domain = message.get("domain")
+                        hydrated.domain = message.get("domain")
+
+                current_project_id = project_id
+                state = hydrated
 
                 await websocket.send_json({
                     "type": "status_update",
