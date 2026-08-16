@@ -82,7 +82,6 @@ export function usePipeline({
   onExportRequested,
   onOpenPlanEditor,
   selectedFile,
-  setSelectedFile,
   setEditorContent,
 }) {
   const [phase, setPhase] = useState("idle");
