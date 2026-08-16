@@ -37,7 +37,10 @@ def is_valid_token(provided: str) -> bool:
         return True
     if not provided:
         return False
-    return secrets.compare_digest(provided, API_AUTH_TOKEN)
+    # Compare as bytes: secrets.compare_digest raises TypeError on str
+    # arguments containing non-ASCII characters, and `provided` is
+    # attacker-controlled request input.
+    return secrets.compare_digest(provided.encode("utf-8", "replace"), API_AUTH_TOKEN.encode("utf-8"))
 
 
 class ApiTokenAuthMiddleware:
@@ -54,7 +57,18 @@ class ApiTokenAuthMiddleware:
             await self.app(scope, receive, send)
             return
 
-        if scope["type"] == "http" and scope.get("path") in EXEMPT_HTTP_PATHS:
+        if scope["type"] == "http" and (
+            scope.get("path") in EXEMPT_HTTP_PATHS or scope.get("method") == "OPTIONS"
+        ):
+            # CORS preflight requests never carry the app's own
+            # Authorization header -- browsers don't attach it to
+            # OPTIONS. This middleware is added after CORSMiddleware in
+            # app.py, which in Starlette makes it the *outer* layer (it
+            # runs before CORSMiddleware, not after), so without this
+            # exemption every preflight would get a bare 401 with none
+            # of CORSMiddleware's Access-Control-Allow-* headers
+            # attached, silently breaking any cross-origin deployment
+            # the moment API_AUTH_TOKEN is set.
             await self.app(scope, receive, send)
             return
 
