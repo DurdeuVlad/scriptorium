@@ -2,9 +2,13 @@
 
 **Purpose:** Enable a new agent, with no prior conversation context, to understand this repository, what has been built, how it was built, and how to continue.
 
-**Last updated:** 2026-03-29
-**Phases complete:** 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-**Next phase:** 11 (Core Writing Pipeline)
+**Last updated:** 2026-03-31
+**Phases complete:** 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 — Phases 11 (Core Writing
+Pipeline) and 12 (QA & Review System) are implemented, verification pending
+(see `ROADMAP.md` and `PRODUCTION_READINESS_PLAN.md` for current status)
+**Next phase:** none pending implementation — remaining work is verifying
+Phases 11-12 end-to-end against `evals/cases/case-01-technical-docs.md` and
+`case-02-portability.md`
 
 **Quick help:** Run `/help` for framework overview and status, or read `QUICK_START.md`
 
@@ -89,7 +93,7 @@ scriptorium/
 | 8 | Sync, Import, Export, Portability | **COMPLETE** | sync.md workflow (upgraded to Phase 8); export_pack, import_pack, conflict_report schemas; PORTABILITY_MODEL, COMMAND_INTEGRATION docs | Phase 8 implements framework portability with conflict detection, selective packs, never-silent-overwrite guarantee |
 | 9 | Hooks, Enforcement, Guardrails | **COMPLETE** | OPERATIONAL_GUARDRAILS doctrine; 4 hook specs (pre-workflow-start, pre-phase-advance, pre-artifact-finalize, on-failure); hooks README | Phase 9 implements hook-based enforcement, quality gate checks, failure handling, resumability |
 | 10 | Evaluations and Comparative Testing | **COMPLETE** | 4 scoring rubrics, 2 evaluation cases, baseline comparison methodology | Phase 10 implements evaluation framework to validate orchestrated approach against simpler baselines |
-| 11 | Core Writing Pipeline | PLANNED | Brief, outline, draft, merge commands and agents |
+| 11 | Core Writing Pipeline | IMPLEMENTED (verification pending) | Brief, outline, draft, merge commands and agents |
 
 ---
 
@@ -249,6 +253,15 @@ Groups: Foundation (6), Discovery (4), Research (5), Editorial (11), QA (7), Orc
 Full catalogue: `.writing-framework/commands/COMMAND_REGISTRY.md`
 
 ---
+
+## Historical: Pre-Implementation Plan for Phase 11
+
+**Note (added 2026-08-16):** The sections below ("What Phase 11 Will Build
+On" through "Files to Read Before Starting Phase 11") were written before
+Phase 11 was implemented and describe the original plan, not current
+state. Phases 11-12 are now implemented (verification pending) — see
+`ROADMAP.md` and `PRODUCTION_READINESS_PLAN.md` for current status. Kept
+here as historical planning context, not as an active to-do list.
 
 ## What Phase 11 Will Build On
 
