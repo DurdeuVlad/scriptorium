@@ -150,6 +150,8 @@ class PlanUpdatePayload(BaseModel):
 @app.get("/style-packs")
 async def get_style_packs(project_id: str | None = None):
     """List built-in and optional per-project custom writing voices."""
+    if project_id and not proj_store.get_project(project_id):
+        raise HTTPException(status_code=404, detail="Project not found")
     return {"voices": list_all_voices(project_id)}
 
 
@@ -459,7 +461,14 @@ def _resolve_ws_project_state(
     hydrated = _hydrate_state_from_project(pid)
     if hydrated:
         return pid, hydrated
-    return pid, state
+    # pid doesn't hydrate to a real project (e.g. a client-supplied
+    # project_id that doesn't exist). Don't trust it as the new
+    # current_project_id -- that would poison the session's tracked
+    # project to an unvalidated value while still carrying the old
+    # (real) state, causing subsequent _persist_state() calls to
+    # silently no-op against a non-existent row. Fall back to whatever
+    # was already validated for this connection instead.
+    return current_project_id, state
 
 
 async def _run_pipeline_start(websocket: WebSocket, graph, state: NewsroomState, project_id: str):
@@ -814,10 +823,11 @@ async def websocket_endpoint(websocket: WebSocket):
                 project_id = message.get("project_id")
                 if not project_id:
                     continue
-                current_project_id = project_id
-                state = _hydrate_state_from_project(project_id)
-                if state:
-                    await websocket.send_json(_conversation_sync_payload(project_id, state))
+                hydrated = _hydrate_state_from_project(project_id)
+                if hydrated:
+                    current_project_id = project_id
+                    state = hydrated
+                    await websocket.send_json(_conversation_sync_payload(project_id, hydrated))
                 continue
 
             # ── start_consult ────────────────────────────────────────────────
@@ -826,15 +836,18 @@ async def websocket_endpoint(websocket: WebSocket):
                 project_id = message.get("project_id")
                 if not project_id:
                     continue
-                current_project_id = project_id
-                state = _hydrate_state_from_project(project_id)
-                if not state:
+                # Resolve into a local var first -- don't touch the
+                # session's current_project_id/state until we know
+                # project_id is real, so an invalid id can't clobber
+                # whatever was already validated for this connection.
+                hydrated = _hydrate_state_from_project(project_id)
+                if not hydrated:
                     p = proj_store.get_project(project_id)
                     if not p:
                         await websocket.send_json({"type": "error", "message": "Project not found"})
                         continue
                     paths = proj_store.get_project_paths(project_id)
-                    state = NewsroomState(
+                    hydrated = NewsroomState(
                         run_id=str(uuid.uuid4()),
                         project_path=paths["project_path"],
                         prompt=message.get("prompt") or p.get("prompt", ""),
@@ -853,11 +866,14 @@ async def websocket_endpoint(websocket: WebSocket):
                     )
                 else:
                     if message.get("prompt"):
-                        state.prompt = message.get("prompt")
+                        hydrated.prompt = message.get("prompt")
                     if message.get("target_audience"):
-                        state.target_audience = message.get("target_audience")
+                        hydrated.target_audience = message.get("target_audience")
                     if message.get("domain"):
-                        state.domain = message.get("domain")
+                        hydrated.domain = message.get("domain")
+
+                current_project_id = project_id
+                state = hydrated
 
                 await websocket.send_json({
                     "type": "status_update",
@@ -912,6 +928,9 @@ async def websocket_endpoint(websocket: WebSocket):
                         domain=message.get("domain", "technical-docs"),
                     )
                     project_id = p["id"]
+                elif not proj_store.get_project(project_id):
+                    await websocket.send_json({"type": "error", "message": "Project not found"})
+                    continue
 
                 current_project_id = project_id
                 hydrated = _hydrate_state_from_project(project_id)

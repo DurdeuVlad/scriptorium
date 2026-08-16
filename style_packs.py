@@ -29,7 +29,8 @@ BUILTIN_PACK_IDS = [
 
 
 def _pack_path(pack_id: str) -> str:
-    return os.path.join(STYLES_DIR, f"{pack_id}.md")
+    safe_id = str(pack_id).strip().replace("/", "").replace("\\", "")
+    return os.path.join(STYLES_DIR, f"{safe_id}.md")
 
 
 def list_builtin_style_packs() -> List[Dict[str, Any]]:
@@ -108,6 +109,15 @@ def custom_voices_dir(project_id: str) -> str:
     return os.path.join("projects", project_id, "voices")
 
 
+def _sanitize_voice_id(voice_id: str) -> str:
+    """Strip path separators so voice_id can never escape custom_voices_dir
+    (mirrors projects.py's _artifact_file_path sanitization)."""
+    safe = str(voice_id).strip().replace("/", "").replace("\\", "")
+    if not safe:
+        raise ValueError("Invalid voice id")
+    return safe
+
+
 def list_custom_voices(project_id: str) -> List[Dict[str, Any]]:
     base = custom_voices_dir(project_id)
     if not os.path.isdir(base):
@@ -132,6 +142,7 @@ def list_custom_voices(project_id: str) -> List[Dict[str, Any]]:
 
 
 def get_custom_voice(project_id: str, voice_id: str) -> Optional[Dict[str, Any]]:
+    voice_id = _sanitize_voice_id(voice_id)
     path = os.path.join(custom_voices_dir(project_id), f"{voice_id}.json")
     if not os.path.isfile(path):
         return None
@@ -141,6 +152,7 @@ def get_custom_voice(project_id: str, voice_id: str) -> Optional[Dict[str, Any]]
 
 def save_custom_voice(project_id: str, voice: Dict[str, Any]) -> Dict[str, Any]:
     voice_id = voice.get("id") or re.sub(r"[^a-z0-9_-]", "-", voice.get("name", "custom").lower())
+    voice_id = _sanitize_voice_id(voice_id)
     voice["id"] = voice_id
     voice["kind"] = "custom"
     voice["updated_at"] = datetime.now(timezone.utc).isoformat()
@@ -153,6 +165,7 @@ def save_custom_voice(project_id: str, voice: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def delete_custom_voice(project_id: str, voice_id: str) -> bool:
+    voice_id = _sanitize_voice_id(voice_id)
     path = os.path.join(custom_voices_dir(project_id), f"{voice_id}.json")
     if os.path.isfile(path):
         os.remove(path)

@@ -206,9 +206,10 @@ def update_project_plan(
 def delete_project(project_id: str):
     """Remove the project from the DB and delete its directory tree."""
     init_db()
-    base = os.path.join(PROJECTS_DIR, project_id)
-    if os.path.exists(base):
-        shutil.rmtree(base)
+    if get_project(project_id):
+        base = os.path.join(PROJECTS_DIR, project_id)
+        if os.path.exists(base):
+            shutil.rmtree(base)
     with sqlite3.connect(PROJECTS_DB) as conn:
         conn.execute("DELETE FROM projects WHERE id = ?", (project_id,))
         conn.commit()
@@ -281,6 +282,7 @@ def list_artifacts(project_id: str) -> list:
 
 
 def read_artifact(project_id: str, artifact_id: str) -> str:
+    _require_project(project_id)
     path = _artifact_file_path(project_id, artifact_id)
     if not os.path.isfile(path):
         raise FileNotFoundError(f"Artifact not found: {artifact_id}")
