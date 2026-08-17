@@ -169,4 +169,10 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md), [docs/GUIDELINES.md](docs/GUIDELINES.md
 
 [MIT](LICENSE) — Copyright (c) 2026 DurdeuVlad
 
+---
+
+## About
+
+Built by [DurdeuVlad](https://github.com/DurdeuVlad).
+
 *Scriptorium — where every word earns its place.*
